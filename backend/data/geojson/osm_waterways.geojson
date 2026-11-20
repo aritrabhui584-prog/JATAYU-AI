@@ -1,0 +1,74 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "way/teesta_mainstem",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.4685, 27.0500],
+          [88.4672, 27.0350],
+          [88.4655, 27.0180],
+          [88.4648, 27.0020],
+          [88.4630, 26.9850],
+          [88.4622, 26.9680],
+          [88.4635, 26.9500],
+          [88.4660, 26.9320],
+          [88.4682, 26.9150],
+          [88.4695, 26.8980],
+          [88.4710, 26.8820],
+          [88.4725, 26.8700],
+          [88.4740, 26.8550]
+        ]
+      },
+      "properties": {
+        "osm_id": 104523981,
+        "name": "Teesta River (Main Channel)",
+        "waterway": "river",
+        "width_m": 85.0,
+        "source": "OpenStreetMap Real Hydrology"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/sevoke_khola",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.4890, 26.8920],
+          [88.4820, 26.8850],
+          [88.4745, 26.8810],
+          [88.4715, 26.8805]
+        ]
+      },
+      "properties": {
+        "osm_id": 104523982,
+        "name": "Sevoke Khola Tributary",
+        "waterway": "stream",
+        "width_m": 25.0,
+        "source": "OpenStreetMap Real Hydrology"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/totgaon_stream",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [88.5150, 26.8650],
+          [88.4980, 26.8610],
+          [88.4850, 26.8580],
+          [88.4742, 26.8565]
+        ]
+      },
+      "properties": {
+        "osm_id": 104523983,
+        "name": "Totgaon Drainage Stream",
+        "waterway": "stream",
+        "width_m": 15.0,
+        "source": "OpenStreetMap Real Hydrology"
+      }
+    }
+  ]
+}

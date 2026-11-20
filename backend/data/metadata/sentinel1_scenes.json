@@ -1,0 +1,631 @@
+{
+  "scenes": [
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261118T000248_20261118T000313_005514_00A8BE",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-18T00:03:00.516191Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "DESCENDING",
+      "relative_orbit": 48,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        87.0600925,
+        25.6028894,
+        89.8096342,
+        27.524114
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              87.3262532,
+              27.524114
+            ],
+            [
+              87.1810033,
+              26.6259199
+            ],
+            [
+              87.0600925,
+              26.0142999
+            ],
+            [
+              89.5297337,
+              25.6028894
+            ],
+            [
+              89.6942194,
+              26.369966
+            ],
+            [
+              89.8096342,
+              27.1189845
+            ],
+            [
+              87.3262532,
+              27.524114
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/18/IW/DV/S1D_IW_GRDH_1SDV_20261118T000248_20261118T000313_005514_00A8BE_C7A7/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261118T000248_20261118T000313_005514_00A8BE",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261115T121313_20261115T121338_005478_00A77C",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-15T12:13:25.728354Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.1874507,
+        26.7024407,
+        88.9377885,
+        28.6270822
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.6724711,
+              28.6270822
+            ],
+            [
+              86.1874507,
+              28.2281147
+            ],
+            [
+              86.3349814,
+              27.3238941
+            ],
+            [
+              86.4154888,
+              26.7024407
+            ],
+            [
+              88.9377885,
+              27.1168751
+            ],
+            [
+              88.8580743,
+              27.6506826
+            ],
+            [
+              88.6724711,
+              28.6270822
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/15/IW/DV/S1D_IW_GRDH_1SDV_20261115T121313_20261115T121338_005478_00A77C_57CD/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261115T121313_20261115T121338_005478_00A77C",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261115T121248_20261115T121313_005478_00A77C",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-15T12:13:00.727978Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.4331502,
+        25.1962745,
+        89.2090568,
+        27.116604
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.9324677,
+              27.116604
+            ],
+            [
+              86.4331502,
+              26.7059578
+            ],
+            [
+              86.5752969,
+              25.9975354
+            ],
+            [
+              86.7536545,
+              25.1962745
+            ],
+            [
+              89.2090568,
+              25.6080764
+            ],
+            [
+              88.9324677,
+              27.116604
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/15/IW/DV/S1D_IW_GRDH_1SDV_20261115T121248_20261115T121313_005478_00A77C_2DCB/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261115T121248_20261115T121313_005478_00A77C",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261110T120500_20261110T120525_005405_00A500",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-10T12:05:13.407428Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 114,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        88.2220316,
+        26.7762563,
+        90.9804107,
+        28.6967216
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              90.715682,
+              28.6967216
+            ],
+            [
+              88.2220316,
+              28.2968709
+            ],
+            [
+              88.3693658,
+              27.5357757
+            ],
+            [
+              88.4776997,
+              26.7762563
+            ],
+            [
+              90.9804107,
+              27.1867434
+            ],
+            [
+              90.8783798,
+              27.8402925
+            ],
+            [
+              90.715682,
+              28.6967216
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/10/IW/DV/S1D_IW_GRDH_1SDV_20261110T120500_20261110T120525_005405_00A500_8924/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261110T120500_20261110T120525_005405_00A500",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1C_IW_GRDH_1SDV_20261104T120440_20261104T120520_010187_014567",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1c",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-04T12:05:00.537808Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 114,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        88.1435173,
+        26.2951949,
+        91.0353748,
+        29.1709545
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              90.6175982,
+              29.1709545
+            ],
+            [
+              89.8253557,
+              29.0498376
+            ],
+            [
+              89.838004,
+              28.9850631
+            ],
+            [
+              88.9622062,
+              28.845932
+            ],
+            [
+              88.9752378,
+              28.7884398
+            ],
+            [
+              88.1435173,
+              28.6504585
+            ],
+            [
+              88.2535191,
+              28.1502764
+            ],
+            [
+              88.3838347,
+              27.453471
+            ],
+            [
+              88.4800383,
+              26.856702
+            ],
+            [
+              88.5543949,
+              26.2951949
+            ],
+            [
+              89.4056627,
+              26.441225
+            ],
+            [
+              89.3983803,
+              26.5063829
+            ],
+            [
+              90.2722617,
+              26.6501134
+            ],
+            [
+              90.2672791,
+              26.7091387
+            ],
+            [
+              91.0353748,
+              26.8306389
+            ],
+            [
+              90.99743,
+              27.131898
+            ],
+            [
+              90.8943273,
+              27.7474477
+            ],
+            [
+              90.7076693,
+              28.7504949
+            ],
+            [
+              90.6175982,
+              29.1709545
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/4/IW/DV/S1C_IW_GRDH_1SDV_20261104T120440_20261104T120520_010187_014567_1F65/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1C_IW_GRDH_1SDV_20261104T120440_20261104T120520_010187_014567",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261103T121313_20261103T121338_005303_00A17B",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-03T12:13:26.239622Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.1871375,
+        26.7024569,
+        88.9374223,
+        28.6270614
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.67211,
+              28.6270614
+            ],
+            [
+              86.1871375,
+              28.2281016
+            ],
+            [
+              86.335062,
+              27.3211223
+            ],
+            [
+              86.4151712,
+              26.7024569
+            ],
+            [
+              88.9374223,
+              27.1168834
+            ],
+            [
+              88.857313,
+              27.6530601
+            ],
+            [
+              88.67211,
+              28.6270614
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/3/IW/DV/S1D_IW_GRDH_1SDV_20261103T121313_20261103T121338_005303_00A17B_57CA/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261103T121313_20261103T121338_005303_00A17B",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261103T121248_20261103T121313_005303_00A17B",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-11-03T12:13:01.239241Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.4328281,
+        25.1962729,
+        89.2087228,
+        27.1165941
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.9321349,
+              27.1165941
+            ],
+            [
+              86.4328281,
+              26.7059497
+            ],
+            [
+              86.5734334,
+              26.0048495
+            ],
+            [
+              86.7533311,
+              25.1962729
+            ],
+            [
+              89.2087228,
+              25.608073
+            ],
+            [
+              88.9321349,
+              27.1165941
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/11/3/IW/DV/S1D_IW_GRDH_1SDV_20261103T121248_20261103T121313_005303_00A17B_DF1D/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261103T121248_20261103T121313_005303_00A17B",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261025T000248_20261025T000313_005164_009CB8",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-10-25T00:03:01.447873Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "DESCENDING",
+      "relative_orbit": 48,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        87.0583475,
+        25.6024056,
+        89.8083075,
+        27.5240407
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              87.3249033,
+              27.5240407
+            ],
+            [
+              87.1749411,
+              26.5991434
+            ],
+            [
+              87.0583475,
+              26.0142126
+            ],
+            [
+              89.5284044,
+              25.6024056
+            ],
+            [
+              89.6952471,
+              26.3824442
+            ],
+            [
+              89.8083075,
+              27.1189074
+            ],
+            [
+              87.3249033,
+              27.5240407
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/10/25/IW/DV/S1D_IW_GRDH_1SDV_20261025T000248_20261025T000313_005164_009CB8_F9D6/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261025T000248_20261025T000313_005164_009CB8",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261022T121314_20261022T121339_005128_009B7D",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-10-22T12:13:26.538325Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.1874651,
+        26.7028073,
+        88.9378231,
+        28.6270665
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.6721072,
+              28.6270665
+            ],
+            [
+              86.1874651,
+              28.228096
+            ],
+            [
+              86.3349969,
+              27.3238687
+            ],
+            [
+              86.4155049,
+              26.7028073
+            ],
+            [
+              88.9378231,
+              27.1172448
+            ],
+            [
+              88.8573152,
+              27.6538324
+            ],
+            [
+              88.6721072,
+              28.6270665
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/10/22/IW/DV/S1D_IW_GRDH_1SDV_20261022T121314_20261022T121339_005128_009B7D_40A0/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261022T121314_20261022T121339_005128_009B7D",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S1D_IW_GRDH_1SDV_20261022T121249_20261022T121314_005128_009B7D",
+      "constellation": "Sentinel-1",
+      "platform": "sentinel-1d",
+      "instrument": "C-SAR",
+      "acquisition_date": "2026-10-22T12:13:01.537968Z",
+      "cloud_coverage_percent": null,
+      "orbit_direction": "ASCENDING",
+      "relative_orbit": 12,
+      "polarization": [
+        "VV",
+        "VH"
+      ],
+      "tile_id": null,
+      "bounds": [
+        86.4331341,
+        25.1959623,
+        89.209041,
+        27.1166772
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.9324519,
+              27.1166772
+            ],
+            [
+              86.4331341,
+              26.706031
+            ],
+            [
+              86.5764365,
+              25.9918301
+            ],
+            [
+              86.7536384,
+              25.1959623
+            ],
+            [
+              89.209041,
+              25.6077642
+            ],
+            [
+              88.9324519,
+              27.1166772
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "s3://sentinel-s1-l1c/GRD/2026/10/22/IW/DV/S1D_IW_GRDH_1SDV_20261022T121249_20261022T121314_005128_009B7D_59B3/preview/quick-look.png",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-1-grd/items/S1D_IW_GRDH_1SDV_20261022T121249_20261022T121314_005128_009B7D",
+      "source_catalog": "AWS Earth Search / Element84"
+    }
+  ],
+  "total": 10
+}

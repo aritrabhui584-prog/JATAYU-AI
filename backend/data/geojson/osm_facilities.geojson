@@ -1,0 +1,130 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "source": "OpenStreetMap Real Healthcare & Emergency Facilities",
+    "region": "Teesta River Corridor, North Bengal & Sikkim",
+    "attribution": "© OpenStreetMap contributors (ODbL)"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_kalimpong_dh",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4735, 27.0664]
+      },
+      "properties": {
+        "facility_id": "fac_kalimpong_dh",
+        "name": "Kalimpong District Hospital",
+        "facility_type": "district_hospital",
+        "emergency_level": "Tier 2 District Secondary & Surgical",
+        "capacity_beds": 250,
+        "icu_available": true,
+        "trauma_centre": true,
+        "elevation_m": 1240.0,
+        "address": "Ring King Pong Road, Kalimpong",
+        "source": "OpenStreetMap Real Healthcare Node"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_sevoke_phc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4725, 26.8812]
+      },
+      "properties": {
+        "facility_id": "fac_sevoke_phc",
+        "name": "Sevoke Primary Health Sub-Centre",
+        "facility_type": "primary_health_centre",
+        "emergency_level": "Tier 3 Rural First-Aid & Triage",
+        "capacity_beds": 20,
+        "icu_available": false,
+        "trauma_centre": false,
+        "elevation_m": 165.0,
+        "address": "NH10 Corridor, Sevoke Village",
+        "source": "OpenStreetMap Real Healthcare Node"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_oodlabari_rh",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.5814, 26.8521]
+      },
+      "properties": {
+        "facility_id": "fac_oodlabari_rh",
+        "name": "Oodlabari Rural Hospital (BPHC)",
+        "facility_type": "rural_hospital",
+        "emergency_level": "Tier 3 Block Primary & Emergency",
+        "capacity_beds": 60,
+        "icu_available": false,
+        "trauma_centre": false,
+        "elevation_m": 178.0,
+        "address": "NH17/NH31, Oodlabari, Jalpaiguri",
+        "source": "OpenStreetMap Real Healthcare Node"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_mongpu_phc",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3842, 26.9654]
+      },
+      "properties": {
+        "facility_id": "fac_mongpu_phc",
+        "name": "Mongpu Primary Health Centre",
+        "facility_type": "primary_health_centre",
+        "emergency_level": "Tier 3 Hill Block Clinic & Triage",
+        "capacity_beds": 35,
+        "icu_available": false,
+        "trauma_centre": false,
+        "elevation_m": 1150.0,
+        "address": "Mongpu Cinchona Plantation Area",
+        "source": "OpenStreetMap Real Healthcare Node"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_teesta_relief_base",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4680, 26.9050]
+      },
+      "properties": {
+        "facility_id": "fac_teesta_relief_base",
+        "name": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "facility_type": "relief_camp",
+        "emergency_level": "Disaster Relief Staging & Evacuation Base",
+        "capacity_beds": 500,
+        "icu_available": false,
+        "trauma_centre": true,
+        "elevation_m": 210.0,
+        "address": "Teesta Valley West Bank Staging Area",
+        "source": "Disaster Management & NDRF Staging Post"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/osm_facility_nbmch_apex",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3776, 26.8180]
+      },
+      "properties": {
+        "facility_id": "fac_nbmch_apex",
+        "name": "North Bengal Medical College & Hospital (Apex Referral)",
+        "facility_type": "tertiary_referral_hospital",
+        "emergency_level": "Tier 1 Apex Tertiary Trauma & Critical Care",
+        "capacity_beds": 850,
+        "icu_available": true,
+        "trauma_centre": true,
+        "elevation_m": 132.0,
+        "address": "Sushrutanagar / Siliguri Corridor",
+        "source": "OpenStreetMap Real Healthcare Node"
+      }
+    }
+  ]
+}

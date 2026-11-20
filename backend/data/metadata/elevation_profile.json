@@ -1,0 +1,70 @@
+{
+  "profile": [
+    {
+      "latitude": 26.85,
+      "longitude": 88.5,
+      "elevation_m": 134.0,
+      "section": "Transect 1 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 26.8833,
+      "longitude": 88.5,
+      "elevation_m": 171.0,
+      "section": "Transect 2 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 26.9167,
+      "longitude": 88.5,
+      "elevation_m": 492.0,
+      "section": "Transect 3 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 26.95,
+      "longitude": 88.5,
+      "elevation_m": 1052.0,
+      "section": "Transect 4 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 26.9833,
+      "longitude": 88.5,
+      "elevation_m": 1144.0,
+      "section": "Transect 5 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 27.0167,
+      "longitude": 88.5,
+      "elevation_m": 906.0,
+      "section": "Transect 6 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 27.05,
+      "longitude": 88.5,
+      "elevation_m": 608.0,
+      "section": "Transect 7 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 27.0833,
+      "longitude": 88.5,
+      "elevation_m": 1474.0,
+      "section": "Transect 8 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 27.1167,
+      "longitude": 88.5,
+      "elevation_m": 561.0,
+      "section": "Transect 9 (Himalayan Gorge)"
+    },
+    {
+      "latitude": 27.15,
+      "longitude": 88.5,
+      "elevation_m": 899.0,
+      "section": "Transect 10 (Himalayan Gorge)"
+    }
+  ],
+  "bbox": {
+    "min_lat": 26.85,
+    "min_lon": 88.4,
+    "max_lat": 27.15,
+    "max_lon": 88.6
+  }
+}

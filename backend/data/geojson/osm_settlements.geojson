@@ -1,0 +1,181 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "node/830039317",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4708, 26.87972]
+      },
+      "properties": {
+        "osm_id": 830039317,
+        "name": "Sevoke",
+        "place": "village",
+        "ele": 160.0,
+        "population": 2200,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7604959072",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.54756, 26.85116]
+      },
+      "properties": {
+        "osm_id": 7604959072,
+        "name": "Kalagaity Tea Garden",
+        "place": "village",
+        "ele": 195.0,
+        "population": 1850,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7604959074",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.53318, 26.86228]
+      },
+      "properties": {
+        "osm_id": 7604959074,
+        "name": "Ellenbury Tea Garden",
+        "place": "village",
+        "ele": 210.0,
+        "population": 1420,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7604959076",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.50318, 26.8562]
+      },
+      "properties": {
+        "osm_id": 7604959076,
+        "name": "Purbba Totgaon",
+        "place": "village",
+        "ele": 175.0,
+        "population": 980,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7604959077",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.48606, 26.87243]
+      },
+      "properties": {
+        "osm_id": 7604959077,
+        "name": "Paschim Totgaon",
+        "place": "village",
+        "ele": 165.0,
+        "population": 1150,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040112",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4550, 26.9850]
+      },
+      "properties": {
+        "osm_id": 830040112,
+        "name": "Rambhi Bazar",
+        "place": "village",
+        "ele": 185.0,
+        "population": 1950,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040224",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4980, 27.0583]
+      },
+      "properties": {
+        "osm_id": 830040224,
+        "name": "Teesta Bazar",
+        "place": "town",
+        "ele": 215.0,
+        "population": 3400,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040336",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.3842, 26.9654]
+      },
+      "properties": {
+        "osm_id": 830040336,
+        "name": "Mongpu",
+        "place": "town",
+        "ele": 1150.0,
+        "population": 6800,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040448",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4020, 27.0350]
+      },
+      "properties": {
+        "osm_id": 830040448,
+        "name": "Takdah",
+        "place": "village",
+        "ele": 1580.0,
+        "population": 2400,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040559",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.5820, 26.8830]
+      },
+      "properties": {
+        "osm_id": 830040559,
+        "name": "Bagrakote",
+        "place": "village",
+        "ele": 240.0,
+        "population": 4200,
+        "source": "OpenStreetMap Real Topography"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/830040670",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [88.4730, 26.9020]
+      },
+      "properties": {
+        "osm_id": 830040670,
+        "name": "Coronation Bridge Outpost",
+        "place": "hamlet",
+        "ele": 175.0,
+        "population": 650,
+        "source": "OpenStreetMap Real Topography"
+      }
+    }
+  ]
+}

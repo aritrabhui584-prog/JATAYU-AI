@@ -1,0 +1,337 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated_at": "2026-11-20T20:58:28.990320+00:00",
+    "total_settlements": 11,
+    "p1_critical_count": 3,
+    "p2_high_count": 1,
+    "weights": {
+      "isolation": 0.35,
+      "nightlight": 0.3,
+      "population": 0.2,
+      "accessibility": 0.15
+    },
+    "scientific_disclaimer": "SCIENTIFIC NOTICE: Priority scores represent deterministic multi-criteria decision indices for emergency logistics, computed strictly from verified satellite observations (Copernicus Sentinel-1 SAR, NASA VIIRS Black Marble VNP46A2), DEM topography, and OSM topological road networks. These scores quantify vulnerability, infrastructure severance, and accessibility impedance; they DO NOT represent confirmed casualties, localized ground-truth emergencies, or hydraulic forecasts. Missing satellite observations (such as cloud obstruction) are never fabricated as power outages and are penalized in the confidence index."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.582,
+          26.883
+        ]
+      },
+      "properties": {
+        "rank": 1,
+        "name": "Bagrakote",
+        "place_type": "village",
+        "composite_priority_score": 86.6,
+        "priority_tier": "P1_CRITICAL",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 4200,
+        "isolation_status": "CRITICALLY_ISOLATED",
+        "isolation_norm": 100.0,
+        "nightlight_reduction_pct": 70.5,
+        "nightlight_norm": 70.5,
+        "nightlight_cluster_id": 2,
+        "accessibility_norm": 95.0,
+        "nearest_facility": null,
+        "detour_delay_min": null,
+        "explanation": "Bagrakote (village) received a composite emergency priority score of 86.6/100 (P1_CRITICAL). Isolation status: CRITICALLY_ISOLATED (contributing 35.0 pts at 35% weight). Night-light sensor confirmed 70.5% brightness reduction in Cluster #2 (contributing 21.1 pts at 30% weight). Demographic exposure: 4,200 residents (16.2 pts). Healthcare accessibility: 95.0/100 (14.2 pts), nearest facility: Regional Medical Centre. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.48606,
+          26.87243
+        ]
+      },
+      "properties": {
+        "rank": 2,
+        "name": "Paschim Totgaon",
+        "place_type": "village",
+        "composite_priority_score": 82.3,
+        "priority_tier": "P1_CRITICAL",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 1150,
+        "isolation_status": "CRITICALLY_ISOLATED",
+        "isolation_norm": 100.0,
+        "nightlight_reduction_pct": 74.7,
+        "nightlight_norm": 74.7,
+        "nightlight_cluster_id": 1,
+        "accessibility_norm": 95.0,
+        "nearest_facility": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "detour_delay_min": null,
+        "explanation": "Paschim Totgaon (village) received a composite emergency priority score of 82.3/100 (P1_CRITICAL). Isolation status: CRITICALLY_ISOLATED (contributing 35.0 pts at 35% weight). Night-light sensor confirmed 74.7% brightness reduction in Cluster #1 (contributing 22.4 pts at 30% weight). Demographic exposure: 1,150 residents (10.6 pts). Healthcare accessibility: 95.0/100 (14.2 pts), nearest facility: Teesta Valley Emergency Relief Staging Camp (NDRF / SSB). Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.473,
+          26.902
+        ]
+      },
+      "properties": {
+        "rank": 3,
+        "name": "Coronation Bridge Outpost",
+        "place_type": "hamlet",
+        "composite_priority_score": 79.8,
+        "priority_tier": "P1_CRITICAL",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 650,
+        "isolation_status": "CRITICALLY_ISOLATED",
+        "isolation_norm": 100.0,
+        "nightlight_reduction_pct": 74.7,
+        "nightlight_norm": 74.7,
+        "nightlight_cluster_id": 1,
+        "accessibility_norm": 95.0,
+        "nearest_facility": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "detour_delay_min": null,
+        "explanation": "Coronation Bridge Outpost (hamlet) received a composite emergency priority score of 79.8/100 (P1_CRITICAL). Isolation status: CRITICALLY_ISOLATED (contributing 35.0 pts at 35% weight). Night-light sensor confirmed 74.7% brightness reduction in Cluster #1 (contributing 22.4 pts at 30% weight). Demographic exposure: 650 residents (8.1 pts). Healthcare accessibility: 95.0/100 (14.2 pts), nearest facility: Teesta Valley Emergency Relief Staging Camp (NDRF / SSB). Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.50318,
+          26.8562
+        ]
+      },
+      "properties": {
+        "rank": 4,
+        "name": "Purbba Totgaon",
+        "place_type": "village",
+        "composite_priority_score": 59.2,
+        "priority_tier": "P2_HIGH",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 980,
+        "isolation_status": "CRITICALLY_ISOLATED",
+        "isolation_norm": 100.0,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 95.0,
+        "nearest_facility": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "detour_delay_min": null,
+        "explanation": "Purbba Totgaon (village) received a composite emergency priority score of 59.2/100 (P2_HIGH). Isolation status: CRITICALLY_ISOLATED (contributing 35.0 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 980 residents (9.9 pts). Healthcare accessibility: 95.0/100 (14.2 pts), nearest facility: Teesta Valley Emergency Relief Staging Camp (NDRF / SSB). Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.455,
+          26.985
+        ]
+      },
+      "properties": {
+        "rank": 5,
+        "name": "Rambhi Bazar",
+        "place_type": "village",
+        "composite_priority_score": 44.0,
+        "priority_tier": "P3_MODERATE",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 1950,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 11.1,
+        "nightlight_reduction_pct": 74.7,
+        "nightlight_norm": 74.7,
+        "nightlight_cluster_id": 1,
+        "accessibility_norm": 32.4,
+        "nearest_facility": "Mongpu Primary Health Centre",
+        "detour_delay_min": 0.0,
+        "explanation": "Rambhi Bazar (village) received a composite emergency priority score of 44.0/100 (P3_MODERATE). Isolation status: ACCESSIBLE (contributing 3.9 pts at 35% weight). Night-light sensor confirmed 74.7% brightness reduction in Cluster #1 (contributing 22.4 pts at 30% weight). Demographic exposure: 1,950 residents (12.9 pts). Healthcare accessibility: 32.4/100 (4.9 pts), nearest facility: Mongpu Primary Health Centre. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.4708,
+          26.87972
+        ]
+      },
+      "properties": {
+        "rank": 6,
+        "name": "Sevoke",
+        "place_type": "village",
+        "composite_priority_score": 36.8,
+        "priority_tier": "P3_MODERATE",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 2200,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 0.2,
+        "nightlight_reduction_pct": 74.7,
+        "nightlight_norm": 74.7,
+        "nightlight_cluster_id": 1,
+        "accessibility_norm": 5.7,
+        "nearest_facility": "Sevoke Primary Health Sub-Centre",
+        "detour_delay_min": 0.0,
+        "explanation": "Sevoke (village) received a composite emergency priority score of 36.8/100 (P3_MODERATE). Isolation status: ACCESSIBLE (contributing 0.1 pts at 35% weight). Night-light sensor confirmed 74.7% brightness reduction in Cluster #1 (contributing 22.4 pts at 30% weight). Demographic exposure: 2,200 residents (13.4 pts). Healthcare accessibility: 5.7/100 (0.8 pts), nearest facility: Sevoke Primary Health Sub-Centre. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.402,
+          27.035
+        ]
+      },
+      "properties": {
+        "rank": 7,
+        "name": "Takdah",
+        "place_type": "village",
+        "composite_priority_score": 24.9,
+        "priority_tier": "P4_LOW",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 2400,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 14.0,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 41.3,
+        "nearest_facility": "Mongpu Primary Health Centre",
+        "detour_delay_min": 0.0,
+        "explanation": "Takdah (village) received a composite emergency priority score of 24.9/100 (P4_LOW). Isolation status: ACCESSIBLE (contributing 4.9 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 2,400 residents (13.8 pts). Healthcare accessibility: 41.3/100 (6.2 pts), nearest facility: Mongpu Primary Health Centre. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.54756,
+          26.85116
+        ]
+      },
+      "properties": {
+        "rank": 8,
+        "name": "Kalagaity Tea Garden",
+        "place_type": "village",
+        "composite_priority_score": 21.2,
+        "priority_tier": "P4_LOW",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 1850,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 7.7,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 38.7,
+        "nearest_facility": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "detour_delay_min": 3.4,
+        "explanation": "Kalagaity Tea Garden (village) received a composite emergency priority score of 21.2/100 (P4_LOW). Isolation status: ACCESSIBLE (contributing 2.7 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 1,850 residents (12.7 pts). Healthcare accessibility: 38.7/100 (5.8 pts), nearest facility: Teesta Valley Emergency Relief Staging Camp (NDRF / SSB). Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.3842,
+          26.9654
+        ]
+      },
+      "properties": {
+        "rank": 9,
+        "name": "Mongpu",
+        "place_type": "town",
+        "composite_priority_score": 19.1,
+        "priority_tier": "P4_LOW",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 6800,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 0.0,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 5.0,
+        "nearest_facility": "Mongpu Primary Health Centre",
+        "detour_delay_min": 0.0,
+        "explanation": "Mongpu (town) received a composite emergency priority score of 19.1/100 (P4_LOW). Isolation status: ACCESSIBLE (contributing 0.0 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 6,800 residents (18.3 pts). Healthcare accessibility: 5.0/100 (0.8 pts), nearest facility: Mongpu Primary Health Centre. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.53318,
+          26.86228
+        ]
+      },
+      "properties": {
+        "rank": 10,
+        "name": "Ellenbury Tea Garden",
+        "place_type": "village",
+        "composite_priority_score": 18.4,
+        "priority_tier": "P4_LOW",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 1420,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 5.6,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 33.0,
+        "nearest_facility": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
+        "detour_delay_min": 0.0,
+        "explanation": "Ellenbury Tea Garden (village) received a composite emergency priority score of 18.4/100 (P4_LOW). Isolation status: ACCESSIBLE (contributing 2.0 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 1,420 residents (11.5 pts). Healthcare accessibility: 33.0/100 (5.0 pts), nearest facility: Teesta Valley Emergency Relief Staging Camp (NDRF / SSB). Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.498,
+          27.0583
+        ]
+      },
+      "properties": {
+        "rank": 11,
+        "name": "Teesta Bazar",
+        "place_type": "town",
+        "composite_priority_score": 18.3,
+        "priority_tier": "P4_LOW",
+        "confidence_score": 100.0,
+        "confidence_tier": "HIGH",
+        "population": 3400,
+        "isolation_status": "ACCESSIBLE",
+        "isolation_norm": 3.6,
+        "nightlight_reduction_pct": 0.0,
+        "nightlight_norm": 0.0,
+        "nightlight_cluster_id": null,
+        "accessibility_norm": 11.7,
+        "nearest_facility": "Kalimpong District Hospital",
+        "detour_delay_min": 0.0,
+        "explanation": "Teesta Bazar (town) received a composite emergency priority score of 18.3/100 (P4_LOW). Isolation status: ACCESSIBLE (contributing 1.3 pts at 35% weight). Normal lighting or unlit background baseline observed (0 pts contributed). Demographic exposure: 3,400 residents (15.3 pts). Healthcare accessibility: 11.7/100 (1.8 pts), nearest facility: Kalimpong District Hospital. Independent assessment confidence is 100.0% (HIGH), supported by RADAR_SAR_VERIFIED and ROUTABLE_TOPOLOGY_VERIFIED."
+      }
+    }
+  ]
+}

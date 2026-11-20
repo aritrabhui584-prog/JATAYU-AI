@@ -1,0 +1,485 @@
+{
+  "scenes": [
+    {
+      "id": "S2B_45RXK_20261119_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2b",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-19T04:51:18.263000Z",
+      "cloud_coverage_percent": 1.9,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXK",
+      "bounds": [
+        88.000286,
+        26.115814,
+        89.1163,
+        27.118837
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.00895236909759,
+              27.1188367268318
+            ],
+            [
+              88.00028585895546,
+              26.12761541055504
+            ],
+            [
+              89.09813438209699,
+              26.11581379542533
+            ],
+            [
+              89.11629996955043,
+              27.106516588214713
+            ],
+            [
+              88.00895236909759,
+              27.1188367268318
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XK/2026/11/S2B_45RXK_20261119_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_45RXK_20261119_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2B_45RXL_20261119_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2b",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-19T04:51:03.532000Z",
+      "cloud_coverage_percent": 0.0,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXL",
+      "bounds": [
+        88.008162,
+        27.018296,
+        89.133681,
+        28.021661
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.01724455823387,
+              28.021661366582553
+            ],
+            [
+              88.00816228830303,
+              27.030569792386007
+            ],
+            [
+              89.11464392071122,
+              27.01829618646564
+            ],
+            [
+              89.13368064719327,
+              28.00886108699929
+            ],
+            [
+              88.01724455823387,
+              28.021661366582553
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XL/2026/11/S2B_45RXL_20261119_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_45RXL_20261119_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2C_45RXK_20261114_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2c",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-14T04:51:14.514000Z",
+      "cloud_coverage_percent": 11.4,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXK",
+      "bounds": [
+        88.000286,
+        26.115814,
+        89.1163,
+        27.118837
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.00895236909759,
+              27.1188367268318
+            ],
+            [
+              88.00028585895546,
+              26.12761541055504
+            ],
+            [
+              89.09813438209699,
+              26.11581379542533
+            ],
+            [
+              89.11629996955043,
+              27.106516588214713
+            ],
+            [
+              88.00895236909759,
+              27.1188367268318
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XK/2026/11/S2C_45RXK_20261114_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2C_45RXK_20261114_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2C_45RXL_20261114_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2c",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-14T04:50:59.785000Z",
+      "cloud_coverage_percent": 24.5,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXL",
+      "bounds": [
+        88.008162,
+        27.018296,
+        89.133681,
+        28.021661
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.01724455823387,
+              28.021661366582553
+            ],
+            [
+              88.00816228830303,
+              27.030569792386007
+            ],
+            [
+              89.11464392071122,
+              27.01829618646564
+            ],
+            [
+              89.13368064719327,
+              28.00886108699929
+            ],
+            [
+              88.01724455823387,
+              28.021661366582553
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XL/2026/11/S2C_45RXL_20261114_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2C_45RXL_20261114_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2B_45RXK_20261109_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2b",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-09T04:51:17.166000Z",
+      "cloud_coverage_percent": 0.5,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXK",
+      "bounds": [
+        88.000286,
+        26.115814,
+        89.1163,
+        27.118837
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.00895236909759,
+              27.1188367268318
+            ],
+            [
+              88.00028585895546,
+              26.12761541055504
+            ],
+            [
+              89.09813438209699,
+              26.11581379542533
+            ],
+            [
+              89.11629996955043,
+              27.106516588214713
+            ],
+            [
+              88.00895236909759,
+              27.1188367268318
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XK/2026/11/S2B_45RXK_20261109_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_45RXK_20261109_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2B_45RXL_20261109_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2b",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-09T04:51:02.434000Z",
+      "cloud_coverage_percent": 6.6,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXL",
+      "bounds": [
+        88.008162,
+        27.018296,
+        89.133681,
+        28.021661
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.01724455823387,
+              28.021661366582553
+            ],
+            [
+              88.00816228830303,
+              27.030569792386007
+            ],
+            [
+              89.11464392071122,
+              27.01829618646564
+            ],
+            [
+              89.13368064719327,
+              28.00886108699929
+            ],
+            [
+              88.01724455823387,
+              28.021661366582553
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XL/2026/11/S2B_45RXL_20261109_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_45RXL_20261109_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2A_45RXK_20261106_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2a",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-06T04:51:22.533000Z",
+      "cloud_coverage_percent": 4.0,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXK",
+      "bounds": [
+        88.000286,
+        26.115814,
+        89.1163,
+        27.118837
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.00895236909759,
+              27.1188367268318
+            ],
+            [
+              88.00028585895546,
+              26.12761541055504
+            ],
+            [
+              89.09813438209699,
+              26.11581379542533
+            ],
+            [
+              89.11629996955043,
+              27.106516588214713
+            ],
+            [
+              88.00895236909759,
+              27.1188367268318
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XK/2026/11/S2A_45RXK_20261106_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_45RXK_20261106_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2A_45RXL_20261106_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2a",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-06T04:51:07.795000Z",
+      "cloud_coverage_percent": 12.1,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXL",
+      "bounds": [
+        88.008162,
+        27.018296,
+        89.133681,
+        28.021661
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.01724455823387,
+              28.021661366582553
+            ],
+            [
+              88.00816228830303,
+              27.030569792386007
+            ],
+            [
+              89.11464392071122,
+              27.01829618646564
+            ],
+            [
+              89.13368064719327,
+              28.00886108699929
+            ],
+            [
+              88.01724455823387,
+              28.021661366582553
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XL/2026/11/S2A_45RXL_20261106_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_45RXL_20261106_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2C_45RXK_20261104_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2c",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-04T04:51:12.315000Z",
+      "cloud_coverage_percent": 29.7,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXK",
+      "bounds": [
+        88.000286,
+        26.115814,
+        89.1163,
+        27.118837
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.00895236909759,
+              27.1188367268318
+            ],
+            [
+              88.00028585895546,
+              26.12761541055504
+            ],
+            [
+              89.09813438209699,
+              26.11581379542533
+            ],
+            [
+              89.11629996955043,
+              27.106516588214713
+            ],
+            [
+              88.00895236909759,
+              27.1188367268318
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XK/2026/11/S2C_45RXK_20261104_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2C_45RXK_20261104_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    },
+    {
+      "id": "S2C_45RXL_20261104_0_L2A",
+      "constellation": "Sentinel-2",
+      "platform": "sentinel-2c",
+      "instrument": "MSI",
+      "acquisition_date": "2026-11-04T04:50:57.588000Z",
+      "cloud_coverage_percent": 15.7,
+      "orbit_direction": null,
+      "relative_orbit": null,
+      "polarization": null,
+      "tile_id": "MGRS-45RXL",
+      "bounds": [
+        88.008162,
+        27.018296,
+        89.133681,
+        28.021661
+      ],
+      "footprint_geojson": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              88.01724455823387,
+              28.021661366582553
+            ],
+            [
+              88.00816228830303,
+              27.030569792386007
+            ],
+            [
+              89.11464392071122,
+              27.01829618646564
+            ],
+            [
+              89.13368064719327,
+              28.00886108699929
+            ],
+            [
+              88.01724455823387,
+              28.021661366582553
+            ]
+          ]
+        ]
+      },
+      "thumbnail_url": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/45/R/XL/2026/11/S2C_45RXL_20261104_0_L2A/preview.jpg",
+      "stac_item_url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2C_45RXL_20261104_0_L2A",
+      "source_catalog": "AWS Earth Search / Element84"
+    }
+  ],
+  "total": 10
+}
