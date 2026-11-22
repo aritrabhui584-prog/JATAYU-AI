@@ -1,102 +1,81 @@
-# JATAYU AI — Intelligent Disaster Prediction & National Emergency Response System
+# JATAYU AI
 
-> **Motto:** *"Predict Before Disaster. Respond Before It's Too Late. Save Lives."*  
-> **Operational Status:** Authorized Command & Control Disaster Operations Platform  
-> **Deployment Target:** National Disaster Management Authority (NDMA), State Disaster Management Authorities (SDMA / Sikkim & West Bengal), National Disaster Response Force (NDRF), and District Emergency Operation Centers (DEOC).
+**Joint Aerial-Topographical Analysis & Yield Utility for Disaster Operations**
 
----
-
-## 1. Operational Overview
-
-**JATAYU AI** is an operational, mission-critical disaster command and control platform engineered specifically for complex mountain river corridors subject to Glacial Lake Outburst Floods (GLOF), cloudbursts, severe monsoonal flash floods, and landslide dam failures.
-
-Its primary operational theater is the **Teesta River Basin Corridor** spanning **Sikkim and North Bengal, India** (Chungthang, Mangan, Dikchu, Singtam, Rangpo, Melli, Teesta Bazar, Kalimpong, Sevoke, and Jalpaiguri).
-
-### Core Operational Principle: Multi-Source Intelligence Fusion
-Rather than relying on isolated sensors or slow manual reports, JATAYU AI unifies multi-source intelligence fusion across 6 independent real-data pipelines:
-1. **Radar Earth Observation:** Copernicus Sentinel-1 C-SAR backscatter ($\sigma^0$ in dB) for all-weather day/night floodwater classification.
-2. **Optical Earth Observation:** Copernicus Sentinel-2 MSI multispectral imagery for cloud-screened NDWI/MNDWI water extraction.
-3. **Hydrometeorological Forecasts:** Copernicus GloFAS streamflow telemetry and ECMWF weather models.
-4. **Digital Elevation Topography:** Authentic **Copernicus DEM GLO-90 (90m global elevation model)** from AWS Open Data for slope hazards, radar shadow screening, and hydraulic stage-rise simulations (+0.5m to +5.0m).
-5. **Topological Highway Networks:** OpenStreetMap routable road vectors (NH10, secondary, tertiary) processed through a Tobler hiking slope-impedance network graph.
-6. **Night-Light Radiance Telemetry:** NASA VIIRS Black Marble VNP46A2 BRDF-corrected nighttime radiance to detect power and infrastructure outage clusters.
+JATAYU AI is an open-source, operational emergency intelligence platform designed for rapid disaster reconnaissance, flood inundation modeling, isolated settlement rescue routing, and multi-sensor satellite surveillance.
 
 ---
 
-## 2. Strict Scientific Grounding & Zero-Fabrication Mandate
-
-In national disaster response, fabricated data costs human lives. JATAYU AI enforces an uncompromising data integrity protocol:
-- **Zero Hallucinated Satellite Data:** Missing satellite granules return explicit `DATA_UNAVAILABLE` or HTTP 404 rather than synthetic rasters.
-- **Zero Invented Elevations or Boundaries:** Elevation data originates strictly from authentic Copernicus DEM GLO-90 COG tiles.
-- **Separation of Confidence from Risk:** Cloud cover or missing sensor observations penalize observational confidence ($0\text{–}100\%$) and are never classified as blackouts or confirmed emergencies.
-- **Spatial Resolution Honesty:** VIIRS ~500m footprint is reported transparently without false individual-building claims.
-
----
-
-## 3. Architecture & Tech Stack
+## Architecture Overview
 
 ```
-                          JATAYU AI PLATFORM
-       ┌────────────────────────────────────────────────────────┐
-       │                REACT 19 + TYPESCRIPT UI                │
-       │   Leaflet GIS Maps • Command KPIs • Priority Matrix    │
-       └───────────────────────────▲────────────────────────────┘
-                                   │ HTTP / JSON API
-       ┌───────────────────────────▼────────────────────────────┐
-       │                FASTAPI BACKEND (PY 3.12)               │
-       ├────────────────────────────────────────────────────────┤
-       │  GIS Engine        Flood Engine       Isolation Engine │
-       │  (OSMnx/Shapely)   (Rasterio/SciPy)   (NetworkX/Tobler)│
-       ├────────────────────────────────────────────────────────┤
-       │  Terrain Engine    Night-Light Engine Priority Engine  │
-       │  (Copernicus 90m)  (NASA VIIRS HDF5)  (Deterministic)  │
-       └───────────────────────────▲────────────────────────────┘
-                                   │
-      ┌────────────────────────────┴───────────────────────────┐
-      │               AUTHENTIC EXTERNAL DATASETS              │
-      │  • Copernicus DEM GLO-90 (AWS Open Data)               │
-      │  • OpenStreetMap Roads, Settlements, Waterways (ODbL)  │
-      │  • NASA VIIRS Black Marble VNP46A2 (Earthdata)         │
-      │  • Copernicus Sentinel-1 & Sentinel-2 (CDSE / STAC)    │
-      │  • Copernicus GloFAS River Gauges (Open-Meteo)         │
-      └────────────────────────────────────────────────────────┘
+                                JATAYU AI PLATFORM
+       +------------------------------------------------------------------+
+       |               React 19 + TypeScript Command Interface            |
+       |  - Unified Tactical Map      - 4-Grid Multi-Year Surveillance    |
+       |  - Multi-Modal Rescue Paths  - Ground Reconnaissance Drawer      |
+       +---------------------------------+--------------------------------+
+                                         | HTTP / JSON API
+       +---------------------------------v--------------------------------+
+       |                  FastAPI Backend Service (Python 3.12)           |
+       |  - Copernicus STAC Engine    - SAR Flood Mask Ingestion          |
+       |  - NetworkX Rescue Router    - NASA VIIRS Night-Light Pipeline   |
+       |  - GloFAS Early Warning      - Tactical SitRep PDF Generator     |
+       +---------------------------------+--------------------------------+
+                                         |
+       +---------------------------------v--------------------------------+
+       |                      Live Sensor & Spatial Data                  |
+       |  - Copernicus Sentinel-1 SAR & Sentinel-2 L2A (Planetary Computer) |
+       |  - NASA Earthdata VIIRS DNB Granules (LAADS DAAC / GIBS)          |
+       |  - Copernicus GloFAS Hydrological Models (Open-Meteo API)        |
+       |  - Copernicus DEM GLO-90 Elevation COGs                          |
+       |  - OpenStreetMap Road Networks, Infrastructure & Facilities       |
+       +------------------------------------------------------------------+
 ```
 
-### Backend
-- **Framework:** FastAPI (Python 3.12), Pydantic v2 schemas, Uvicorn ASGI.
-- **Geospatial & Vector:** GeoPandas, Shapely 2.0, PyProj (WGS84 ellipsoidal geodesy).
-- **Rasters & Remote Sensing:** Rasterio (GDAL), NumPy, SciPy (multidimensional image processing, distance transforms).
-- **Network Routing:** NetworkX, OSMnx 2.0.
-- **Scientific Formats:** HDF5 (`h5py`), Cloud-Optimized GeoTIFF (`rasterio`).
-- **Persistence & Attribution:** SQLite (`backend/data/sqlite/jatayu.db`).
+---
 
-### Frontend
-- **Framework:** React 19, TypeScript.
-- **Build Engine:** Vite 8 (Rolldown).
-- **Styling:** Tailwind CSS v4 with dark command-and-control operations theme.
-- **Mapping:** Leaflet & React-Leaflet with live tile layer controls.
-- **Analytics Charts:** Recharts (hypsometric elevation distribution & streamflow hydrographs).
-- **Icons:** Lucide React.
+## Core Capabilities
+
+### 1. Unified Tactical Command Map
+- **Multi-Modal Rescue Planning**: Deterministic pathfinding combining primary highways, secondary bypasses, railway corridors, and designated Helicopter Landing Zones (HLZ).
+- **Stage-Rise Flood Simulation**: Hydrological terrain models simulating floodwater inundation across river basins with contour increments.
+- **Ground Reconnaissance Drawer**: Sector inspection providing distance-to-hazard measurements, nearest emergency facilities, hospital capacity metrics, and verified ground-level photography.
+
+### 2. 4-Grid Multi-Year Surveillance Matrix
+- **Synchronized Multi-Temporal View**: Four independent viewports for baseline, historical flood, recent optical pass, and live daily satellite surveillance.
+- **Multi-Year Archive (2015–2026)**: Query clear Sentinel-2 optical and Sentinel-1 radar scenes across any historical year using automated cloud-cover filtering (<5%).
+- **Authentic NASA Earthdata VIIRS Night-Cam**: Real-time Day/Night Band (DNB) orbital passes without synthetic blending or historical 2016 fallbacks.
+
+### 3. Early Warning & Automated SITREP Reporting
+- **Copernicus GloFAS Hydrographs**: Live 15-day river discharge forecasts with recurrence interval thresholding (2-year, 5-year, and 20-year flood levels).
+- **Automated SitRep PDF Generator**: Generates formal incident situation reports with current evacuation routes, severed bridges, and triage priority lists.
 
 ---
 
-## 4. Key Engines & Capabilities
+## Technology Stack
 
-| Engine | Primary Function | Source Data |
-| :--- | :--- | :--- |
-| **Geographic Data Engine** | Verifies settlements, road vectors, waterways, and 26 healthcare nodes | OpenStreetMap Overpass API |
-| **Terrain Engine** | Slope calculation, hillshade, hypsometry, radar shadow masking | Copernicus DEM GLO-90 (AWS Open Data) |
-| **Flood Analysis Engine** | SAR backscatter thresholding ($\sigma^0 < -16\,\text{dB}$), water distance transforms, and stage rise (+0.5m to +5m) | Copernicus Sentinel-1 C-SAR & GLO-90 DEM |
-| **Road Isolation Engine** | Detects submerged bridges and cut corridors (NH10), finds shortest hospital detours | NetworkX topological graph & Tobler speed model |
-| **Night-Light Engine** | Multi-temporal baseline, cloud-screened radiance drop, spatial clustering | NASA VIIRS Black Marble VNP46A2 HDF5 |
-| **Emergency Priority Engine** | Multi-criteria triage model ($w_{\text{iso}}=0.35, w_{\text{ntl}}=0.30, w_{\text{pop}}=0.20, w_{\text{acc}}=0.15$) | Fused Engine Pipeline |
+| Layer | Technologies |
+|---|---|
+| **Backend** | Python 3.12, FastAPI, Uvicorn, Pydantic v2, HTTPX |
+| **Geospatial & Rasters** | Rasterio, GDAL, GeoPandas, Shapely, PyProj, h5py |
+| **Network & Analysis** | NetworkX, SciPy, NumPy, OSMnx |
+| **Frontend** | React 19, TypeScript, Vite, Tailwind CSS |
+| **Mapping & Charts** | Leaflet, React-Leaflet, Recharts, Lucide Icons |
+| **Document Generation** | ReportLab (Vector PDF Generation) |
 
 ---
 
-## 5. Quick Start & Execution
+## Getting Started
 
-### 1. One-Command Unified Launch (Port 8000 — Recommended)
-JATAYU AI serves both the React Command & Control frontend and the FastAPI backend on a single unified port (`8000`):
+### Prerequisites
+- Python 3.12+
+- Node.js 20+ and npm
+- Git
+
+### Unified Single-Port Execution (Recommended)
+
+JATAYU AI can be launched on a single unified port (`8000`), serving both the FastAPI endpoints and the compiled React production application:
 
 **Windows PowerShell:**
 ```powershell
@@ -109,50 +88,80 @@ chmod +x start_jatayu.sh
 ./start_jatayu.sh
 ```
 
-* **Command & Control Operations Dashboard:** [http://127.0.0.1:8000/](http://127.0.0.1:8000/)
-* **Interactive Swagger API Docs:** [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-* **Backend Health Check:** [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health)
-* **Direct SITREP PDF Export:** [http://127.0.0.1:8000/api/priority/export/sitrep.pdf](http://127.0.0.1:8000/api/priority/export/sitrep.pdf)
+- **Application Interface:** `http://localhost:8000/`
+- **Interactive API Documentation:** `http://localhost:8000/docs`
+- **Health Check Endpoint:** `http://localhost:8000/api/health`
 
 ---
 
-### 2. Docker / Container Deployment (Single Port 8000)
+### Docker Deployment
+
+To launch the full containerized stack:
+
 ```bash
 docker compose up --build
 ```
-The multi-stage container automatically builds the React SPA and serves the application on `http://localhost:8000`.
+
+The container automatically builds the frontend assets and exposes the unified service on port `8000`.
 
 ---
 
-### 3. Development Mode with Vite HMR (Split Ports)
-If developing UI components with hot-module reloading:
-1. **Backend:** `cd backend && .\.venv\Scripts\Activate.ps1 && uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload`
-2. **Frontend:** `cd frontend && npm run dev -- --host 127.0.0.1 --port 5173` (proxies `/api` -> `http://127.0.0.1:8000`)
+### Development Setup (Split Ports)
+
+For active frontend and backend development:
+
+1. **Backend Service:**
+   ```bash
+   cd backend
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
+   ```
+
+2. **Frontend Service:**
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
 
 ---
 
-### 4. Ingest Authentic Copernicus DEM GLO-90
-To manually download and mosaic the authentic Copernicus DEM 90m tiles for the Teesta Basin from AWS Open Data:
-```powershell
-cd backend
-.\.venv\Scripts\Activate.ps1
-python ingest_teesta.py --service dem --preset teesta_middle
+## Environment Configuration
+
+Copy the example configuration to set up your environment variables:
+
+```bash
+cp backend/.env.example backend/.env
 ```
 
+| Variable | Description |
+|---|---|
+| `EARTHDATA_TOKEN` | NASA Earthdata bearer token for real-time VIIRS CMR queries |
+| `GOOGLE_MAPS_API_KEY` | Optional API key for Google Maps aerial fallbacks |
+| `COPERNICUS_CLIENT_ID` | Optional credentials for Copernicus Data Space Ecosystem |
+| `COPERNICUS_CLIENT_SECRET` | Optional secret for Copernicus Data Space Ecosystem |
+| `ENVIRONMENT` | Deployment environment (`development` or `production`) |
+| `PORT` | Local hosting port (defaults to `8000`) |
+
 ---
 
-### 5. Run Automated Test Suite
-```powershell
+## Testing
+
+Run backend tests using `pytest`:
+
+```bash
 cd backend
 pytest tests -v
 ```
 
 ---
 
-## 6. Official Data Attribution & Licensing
+## Data Attribution & Sources
 
-- **Copernicus Earth Observation:** European Space Agency (ESA) Copernicus Programme (Free open-access under Copernicus license).
-- **Copernicus DEM 90m:** AWS Open Data Registry (`s3://copernicus-dem-90m`).
-- **OpenStreetMap:** © OpenStreetMap contributors (ODbL 1.0).
-- **NASA Black Marble:** NASA EOSDIS Land Processes DAAC (LP DAAC) / NASA Earth Science Data.
-- **River Streamflow:** Copernicus Global Flood Awareness System (GloFAS) via Open-Meteo API.
+- **Copernicus Earth Observation**: European Space Agency (ESA) Sentinel-1 & Sentinel-2 missions.
+- **Topography**: Copernicus GLO-90 Digital Elevation Model.
+- **Night Radiance**: NASA Earthdata LAADS DAAC VIIRS Day/Night Band imagery.
+- **Base Geodata**: OpenStreetMap contributors.
+- **Hydrological Forecasts**: Copernicus Global Flood Awareness System (GloFAS).
