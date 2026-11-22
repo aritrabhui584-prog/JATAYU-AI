@@ -49,7 +49,7 @@ class FeatureComponents(BaseModel):
     nightlight_cluster_id: Optional[int] = None
     nightlight_cloud_obscured: bool = False
 
-    population_raw: int
+    population_raw: Optional[int] = None
     population_norm: float = Field(..., ge=0.0, le=100.0, description="Normalized population exposure score (0-100)")
     population_weight: float
     population_score_contribution: float
@@ -86,7 +86,7 @@ class VillagePriorityItem(BaseModel):
     latitude: float
     longitude: float
     elevation_m: float
-    population: int
+    population: Optional[int] = None
     composite_priority_score: float = Field(..., ge=0.0, le=100.0)
     priority_tier: PriorityTier
     priority_tier_label: str

@@ -1,0 +1,561 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "generated_at": "2026-11-22T09:33:35.428010+00:00",
+    "total_candidate_zones": 21,
+    "criteria": {
+      "max_slope_deg": 4.5,
+      "min_clearance_cells": 4,
+      "max_distance_to_village_km": 3.5,
+      "dem_source": "Copernicus DEM GLO-90 (AWS Open Data)"
+    }
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "HLZ-01",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.48774,
+          26.86963
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-01",
+        "name": "Air Rescue LZ HLZ-01 (Paschim Totgaon)",
+        "elevation_m": 140.6,
+        "slope_degrees": 0.84,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 0.35,
+        "clearance_footprint_m": 2466,
+        "clearance_area_sqm": 6083100,
+        "suitability_score": 100.0,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.86963,
+        "longitude": 88.48774
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-02",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.47567,
+          26.88508
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-02",
+        "name": "Air Rescue LZ HLZ-02 (Sevoke)",
+        "elevation_m": 143.1,
+        "slope_degrees": 1.54,
+        "nearest_settlement": "Sevoke",
+        "distance_to_settlement_km": 0.77,
+        "clearance_footprint_m": 284,
+        "clearance_area_sqm": 81000,
+        "suitability_score": 96.9,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88508,
+        "longitude": 88.47567
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-03",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.46252,
+          26.87598
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-03",
+        "name": "Air Rescue LZ HLZ-03 (Sevoke)",
+        "elevation_m": 160.1,
+        "slope_degrees": 2.29,
+        "nearest_settlement": "Sevoke",
+        "distance_to_settlement_km": 0.92,
+        "clearance_footprint_m": 948,
+        "clearance_area_sqm": 899100,
+        "suitability_score": 88.3,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.87598,
+        "longitude": 88.46252
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-04",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.50113,
+          26.88167
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-04",
+        "name": "Air Rescue LZ HLZ-04 (Paschim Totgaon)",
+        "elevation_m": 163.9,
+        "slope_degrees": 1.95,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 1.81,
+        "clearance_footprint_m": 336,
+        "clearance_area_sqm": 113400,
+        "suitability_score": 80.7,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88167,
+        "longitude": 88.50113
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-05",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.49461,
+          26.88142
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-05",
+        "name": "Air Rescue LZ HLZ-05 (Paschim Totgaon)",
+        "elevation_m": 187.0,
+        "slope_degrees": 2.73,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 1.31,
+        "clearance_footprint_m": 685,
+        "clearance_area_sqm": 469800,
+        "suitability_score": 79.7,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88142,
+        "longitude": 88.49461
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-06",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.45193,
+          26.87618
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-06",
+        "name": "Air Rescue LZ HLZ-06 (Sevoke)",
+        "elevation_m": 178.5,
+        "slope_degrees": 2.31,
+        "nearest_settlement": "Sevoke",
+        "distance_to_settlement_km": 1.91,
+        "clearance_footprint_m": 392,
+        "clearance_area_sqm": 153900,
+        "suitability_score": 76.3,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.87618,
+        "longitude": 88.45193
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-07",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.50912,
+          26.87513
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-07",
+        "name": "Air Rescue LZ HLZ-07 (Purbba Totgaon)",
+        "elevation_m": 183.3,
+        "slope_degrees": 2.2,
+        "nearest_settlement": "Purbba Totgaon",
+        "distance_to_settlement_km": 2.19,
+        "clearance_footprint_m": 1087,
+        "clearance_area_sqm": 1182600,
+        "suitability_score": 74.0,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.87513,
+        "longitude": 88.50912
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-08",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.43472,
+          26.99457
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-08",
+        "name": "Air Rescue LZ HLZ-08 (Rambhi Bazar)",
+        "elevation_m": 182.1,
+        "slope_degrees": 2.09,
+        "nearest_settlement": "Rambhi Bazar",
+        "distance_to_settlement_km": 2.27,
+        "clearance_footprint_m": 467,
+        "clearance_area_sqm": 218700,
+        "suitability_score": 73.9,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.99457,
+        "longitude": 88.43472
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-09",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.44911,
+          26.87176
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-09",
+        "name": "Air Rescue LZ HLZ-09 (Sevoke)",
+        "elevation_m": 204.5,
+        "slope_degrees": 2.17,
+        "nearest_settlement": "Sevoke",
+        "distance_to_settlement_km": 2.33,
+        "clearance_footprint_m": 476,
+        "clearance_area_sqm": 226800,
+        "suitability_score": 72.6,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.87176,
+        "longitude": 88.44911
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-10",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.45278,
+          27.00229
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-10",
+        "name": "Air Rescue LZ HLZ-10 (Rambhi Bazar)",
+        "elevation_m": 214.0,
+        "slope_degrees": 2.69,
+        "nearest_settlement": "Rambhi Bazar",
+        "distance_to_settlement_km": 1.94,
+        "clearance_footprint_m": 440,
+        "clearance_area_sqm": 194400,
+        "suitability_score": 72.5,
+        "suitability_tier": "Tier 1 - Primary Air Rescue",
+        "operational_status": "Clear & Approachable",
+        "latitude": 27.00229,
+        "longitude": 88.45278
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-11",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.50667,
+          26.88231
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-11",
+        "name": "Air Rescue LZ HLZ-11 (Paschim Totgaon)",
+        "elevation_m": 156.9,
+        "slope_degrees": 2.35,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 2.32,
+        "clearance_footprint_m": 270,
+        "clearance_area_sqm": 72900,
+        "suitability_score": 71.0,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88231,
+        "longitude": 88.50667
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-12",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.50411,
+          26.885
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-12",
+        "name": "Air Rescue LZ HLZ-12 (Paschim Totgaon)",
+        "elevation_m": 184.3,
+        "slope_degrees": 2.58,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 2.27,
+        "clearance_footprint_m": 348,
+        "clearance_area_sqm": 121500,
+        "suitability_score": 69.5,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.885,
+        "longitude": 88.50411
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-13",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.48883,
+          26.884
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-13",
+        "name": "Air Rescue LZ HLZ-13 (Paschim Totgaon)",
+        "elevation_m": 187.4,
+        "slope_degrees": 3.02,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 1.32,
+        "clearance_footprint_m": 201,
+        "clearance_area_sqm": 40500,
+        "suitability_score": 69.5,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.884,
+        "longitude": 88.48883
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-14",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.43034,
+          26.97059
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-14",
+        "name": "Air Rescue LZ HLZ-14 (Rambhi Bazar)",
+        "elevation_m": 169.5,
+        "slope_degrees": 2.5,
+        "nearest_settlement": "Rambhi Bazar",
+        "distance_to_settlement_km": 2.92,
+        "clearance_footprint_m": 371,
+        "clearance_area_sqm": 137700,
+        "suitability_score": 62.5,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.97059,
+        "longitude": 88.43034
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-15",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.43958,
+          26.99542
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-15",
+        "name": "Air Rescue LZ HLZ-15 (Rambhi Bazar)",
+        "elevation_m": 236.1,
+        "slope_degrees": 2.85,
+        "nearest_settlement": "Rambhi Bazar",
+        "distance_to_settlement_km": 1.92,
+        "clearance_footprint_m": 180,
+        "clearance_area_sqm": 32400,
+        "suitability_score": 61.4,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.99542,
+        "longitude": 88.43958
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-16",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.44167,
+          27.00042
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-16",
+        "name": "Air Rescue LZ HLZ-16 (Rambhi Bazar)",
+        "elevation_m": 183.4,
+        "slope_degrees": 2.91,
+        "nearest_settlement": "Rambhi Bazar",
+        "distance_to_settlement_km": 2.16,
+        "clearance_footprint_m": 180,
+        "clearance_area_sqm": 32400,
+        "suitability_score": 57.8,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 27.00042,
+        "longitude": 88.44167
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-17",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.45553,
+          26.92873
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-17",
+        "name": "Air Rescue LZ HLZ-17 (Coronation Bridge Outpost)",
+        "elevation_m": 157.7,
+        "slope_degrees": 2.34,
+        "nearest_settlement": "Coronation Bridge Outpost",
+        "distance_to_settlement_km": 3.44,
+        "clearance_footprint_m": 392,
+        "clearance_area_sqm": 153900,
+        "suitability_score": 57.6,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.92873,
+        "longitude": 88.45553
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-18",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.6,
+          26.88708
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-18",
+        "name": "Air Rescue LZ HLZ-18 (Bagrakote)",
+        "elevation_m": 200.6,
+        "slope_degrees": 3.51,
+        "nearest_settlement": "Bagrakote",
+        "distance_to_settlement_km": 1.84,
+        "clearance_footprint_m": 180,
+        "clearance_area_sqm": 32400,
+        "suitability_score": 56.3,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88708,
+        "longitude": 88.6
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-19",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.41781,
+          26.9626
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-19",
+        "name": "Air Rescue LZ HLZ-19 (Mongpu)",
+        "elevation_m": 285.5,
+        "slope_degrees": 2.99,
+        "nearest_settlement": "Mongpu",
+        "distance_to_settlement_km": 3.35,
+        "clearance_footprint_m": 254,
+        "clearance_area_sqm": 64800,
+        "suitability_score": 53.0,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.9626,
+        "longitude": 88.41781
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-20",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.5105,
+          26.88433
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-20",
+        "name": "Air Rescue LZ HLZ-20 (Paschim Totgaon)",
+        "elevation_m": 179.1,
+        "slope_degrees": 3.12,
+        "nearest_settlement": "Paschim Totgaon",
+        "distance_to_settlement_km": 2.76,
+        "clearance_footprint_m": 201,
+        "clearance_area_sqm": 40500,
+        "suitability_score": 51.2,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 26.88433,
+        "longitude": 88.5105
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "HLZ-21",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.52917,
+          27.04958
+        ]
+      },
+      "properties": {
+        "hlz_id": "HLZ-21",
+        "name": "Air Rescue LZ HLZ-21 (Teesta Bazar)",
+        "elevation_m": 571.2,
+        "slope_degrees": 2.69,
+        "nearest_settlement": "Teesta Bazar",
+        "distance_to_settlement_km": 3.23,
+        "clearance_footprint_m": 180,
+        "clearance_area_sqm": 32400,
+        "suitability_score": 47.0,
+        "suitability_tier": "Tier 2 - Secondary Evacuation",
+        "operational_status": "Clear & Approachable",
+        "latitude": 27.04958,
+        "longitude": 88.52917
+      }
+    }
+  ]
+}

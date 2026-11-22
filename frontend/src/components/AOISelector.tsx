@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AOIConfig, AOIPreset, BoundingBox } from '../types';
-import { Compass, Check, X, Sliders, MapPin, AlertCircle } from 'lucide-react';
+import { Compass, Check, X, AlertCircle } from 'lucide-react';
 
 interface AOISelectorProps {
   activeAOI: AOIConfig | null;
@@ -79,24 +79,24 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-2xl shadow-2xl shadow-cyan-950/40 overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-[3000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-[#111113] border border-zinc-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950">
+        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between bg-black">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-lg bg-cyan-950 border border-cyan-800 flex items-center justify-center text-cyan-400">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-700 flex items-center justify-center text-white">
               <Compass className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-100 text-sm">Configure Area of Interest (AOI)</h3>
-              <p className="text-xs text-slate-400">
+              <h3 className="font-bold text-white text-sm">Configure Area of Interest (AOI)</h3>
+              <p className="text-xs text-zinc-400">
                 Constrain all real-data GIS queries to a targeted river corridor bounding box
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition cursor-pointer"
+            className="p-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -112,13 +112,13 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
           )}
 
           {/* Toggle Tabs */}
-          <div className="flex rounded-lg bg-slate-950 p-1 border border-slate-800">
+          <div className="flex rounded-lg bg-black p-1 border border-zinc-800">
             <button
               onClick={() => setIsCustomMode(false)}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer ${
                 !isCustomMode
-                  ? 'bg-cyan-900/80 text-cyan-200 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Teesta Corridor Presets
@@ -127,8 +127,8 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
               onClick={() => setIsCustomMode(true)}
               className={`flex-1 py-1.5 text-xs font-semibold rounded-md transition cursor-pointer ${
                 isCustomMode
-                  ? 'bg-cyan-900/80 text-cyan-200 shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black shadow-sm font-bold'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Custom Bounding Box
@@ -137,7 +137,7 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
 
           {!isCustomMode ? (
             <div className="space-y-3">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-zinc-400">
                 Select a validated geographic sector along the Teesta River basin:
               </p>
               <div className="grid grid-cols-1 gap-3">
@@ -149,28 +149,28 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                       onClick={() => !isSubmitting && handleSelectPreset(preset.id)}
                       className={`p-4 rounded-xl border text-left transition cursor-pointer flex items-start justify-between ${
                         isSelected
-                          ? 'bg-cyan-950/40 border-cyan-500 shadow-md shadow-cyan-950/20'
-                          : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+                          ? 'bg-zinc-900 border-white shadow-md'
+                          : 'bg-black border-zinc-800 hover:border-zinc-600'
                       }`}
                     >
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-sm text-slate-200">
+                          <span className="font-semibold text-sm text-white">
                             {preset.name}
                           </span>
                           {isSelected && (
-                            <span className="text-[10px] bg-cyan-900 text-cyan-200 font-bold px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] bg-white text-black font-bold px-2 py-0.5 rounded-full">
                               ACTIVE
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400">{preset.description}</p>
-                        <div className="font-mono text-[11px] text-cyan-400/90 pt-1">
+                        <p className="text-xs text-zinc-400">{preset.description}</p>
+                        <div className="font-mono text-[11px] text-zinc-400 pt-1">
                           Bounds: [{preset.min_lat}°N, {preset.min_lon}°E] to [{preset.max_lat}°N, {preset.max_lon}°E]
                         </div>
                       </div>
                       {isSelected && (
-                        <div className="w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center text-slate-950 shrink-0 mt-0.5">
+                        <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-black shrink-0 mt-0.5">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
                       )}
@@ -182,21 +182,21 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
           ) : (
             <form onSubmit={handleCustomSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold text-zinc-300 mb-1">
                   Area Name / Sector Label
                 </label>
                 <input
                   type="text"
                   value={customName}
                   onChange={(e) => setCustomName(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-white"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
                     South Latitude (min_lat)
                   </label>
                   <input
@@ -204,12 +204,12 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                     step="0.001"
                     value={minLat}
                     onChange={(e) => setMinLat(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
                     North Latitude (max_lat)
                   </label>
                   <input
@@ -217,12 +217,12 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                     step="0.001"
                     value={maxLat}
                     onChange={(e) => setMaxLat(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
                     West Longitude (min_lon)
                   </label>
                   <input
@@ -230,12 +230,12 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                     step="0.001"
                     value={minLon}
                     onChange={(e) => setMinLon(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold text-zinc-300 mb-1">
                     East Longitude (max_lon)
                   </label>
                   <input
@@ -243,14 +243,14 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                     step="0.001"
                     value={maxLon}
                     onChange={(e) => setMaxLon(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-cyan-500"
+                    className="w-full bg-black border border-zinc-700 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
                     required
                   />
                 </div>
               </div>
 
-              <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                <span className="font-semibold text-slate-300">Teesta Basin Geographic Reference:</span>
+              <div className="p-3 rounded-lg bg-black border border-zinc-800 text-[11px] text-zinc-400 space-y-1">
+                <span className="font-semibold text-zinc-300">Teesta Basin Geographic Reference:</span>
                 <div>• North Sikkim (Mangan / Chungthang): 27.40°N to 27.80°N, 88.40°E to 88.75°E</div>
                 <div>• Middle Gorge (Kalimpong / Rangpo / Sevoke): 26.85°N to 27.30°N, 88.35°E to 88.65°E</div>
                 <div>• Lower Plains (Siliguri / Jalpaiguri): 26.40°N to 26.85°N, 88.40°E to 88.90°E</div>
@@ -260,14 +260,14 @@ export const AOISelector: React.FC<AOISelectorProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs hover:bg-slate-700 transition cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 text-xs hover:bg-zinc-800 hover:text-white transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black font-bold text-xs transition cursor-pointer disabled:opacity-50"
                 >
                   {isSubmitting ? 'Applying AOI...' : 'Apply Custom AOI'}
                 </button>

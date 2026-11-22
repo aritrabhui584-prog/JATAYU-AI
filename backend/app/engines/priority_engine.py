@@ -110,19 +110,25 @@ class PriorityEngine:
         # B. Night-light results (NASA VIIRS VNP46A2)
         nightlight_res = nightlight_engine.get_latest_result()
         if nightlight_res is None:
-            nightlight_res = nightlight_engine.run_nightlight_analysis()
+            try:
+                nightlight_res = nightlight_engine.run_nightlight_analysis()
+            except Exception as e:
+                logger.info(f"Night-light observations unavailable for priority ranking: {e}")
+                nightlight_res = None
 
         # C. Flood & scenario results
         flood_res = flood_engine.latest_result
         if flood_res is None:
-            if params.stage_rise_m is not None:
-                flood_res = flood_engine.run_scenario_analysis(
-                    ScenarioAnalysisParams(stage_rise_m=params.stage_rise_m)
-                )
-            else:
-                flood_res = flood_engine.run_flood_analysis(
-                    FloodAnalysisParams(post_event_scene_id="S1A_IW_GRDH_1SDV_20231005_TEESTA")
-                )
+            try:
+                if params.stage_rise_m is not None:
+                    flood_res = flood_engine.run_scenario_analysis(
+                        ScenarioAnalysisParams(stage_rise_m=params.stage_rise_m)
+                    )
+                else:
+                    flood_res = flood_engine.run_scenario_analysis()
+            except Exception as e:
+                logger.info(f"Flood analysis unavailable for priority ranking: {e}")
+                flood_res = None
 
         inundated_settlement_names = {
             s.name.lower(): s for s in (flood_res.inundated_settlements if flood_res else [])
@@ -142,8 +148,8 @@ class PriorityEngine:
             place_type = s.get("place_type", "village")
             lat = float(s.get("latitude", 26.9))
             lon = float(s.get("longitude", 88.5))
-            elevation_m = float(s.get("elevation_m") or 250.0)
-            pop = int(s.get("population") or 1200)
+            elevation_m = float(s.get("elevation_m") or 150.0)
+            pop = int(s["population"]) if s.get("population") is not None else None
 
             # --- A. Isolation Normalization (0-100) ---
             access_info = accessibility_map.get(osm_id) or accessibility_map.get(name.lower())
@@ -205,14 +211,17 @@ class PriorityEngine:
             ntl_contrib = round(eff_w["nightlight"] * ntl_norm, 2)
 
             # --- C. Population Exposure Normalization (0-100) ---
-            # Logarithmic scaling from 100 residents (0 pts) to 10,000 residents (100 pts)
-            pop_clamped = max(100, min(25000, pop))
-            log_min = math.log10(100)
-            log_max = math.log10(10000)
-            pop_norm = round(
-                min(100.0, max(5.0, ((math.log10(pop_clamped) - log_min) / (log_max - log_min)) * 100.0)),
-                1,
-            )
+            if pop is not None:
+                # Logarithmic scaling from 100 residents (0 pts) to 10,000 residents (100 pts)
+                pop_clamped = max(100, min(25000, pop))
+                log_min = math.log10(100)
+                log_max = math.log10(10000)
+                pop_norm = round(
+                    min(100.0, max(5.0, ((math.log10(pop_clamped) - log_min) / (log_max - log_min)) * 100.0)),
+                    1,
+                )
+            else:
+                pop_norm = 25.0  # Neutral baseline exposure for unrecorded settlements
             pop_contrib = round(eff_w["population"] * pop_norm, 2)
 
             # --- D. Accessibility / Inaccessibility Normalization (0-100) ---
@@ -273,8 +282,13 @@ class PriorityEngine:
             road_pts = 20.0
             road_quality = "ROUTABLE_TOPOLOGY_VERIFIED"
 
-            census_pts = 20.0
-            census_quality = "VERIFIED_CENSUS_OSM"
+            if pop is not None:
+                census_pts = 20.0
+                census_quality = "VERIFIED_CENSUS_OSM"
+            else:
+                census_pts = 5.0
+                census_quality = "UNRECORDED_IN_OSM"
+                missing_obs.append("Settlement population not recorded in OpenStreetMap tags.")
 
             overall_confidence = round(viirs_pts + sentinel_pts + road_pts + census_pts, 1)
             if overall_confidence >= 80.0:
@@ -307,8 +321,10 @@ class PriorityEngine:
             if is_flooded:
                 limiting_factors.append("Direct river flood inundation intersection recorded.")
 
-            if pop >= 3000:
+            if pop is not None and pop >= 3000:
                 limiting_factors.append(f"High population exposure ({pop:,} residents in hazard zone).")
+            elif pop is None:
+                limiting_factors.append("Demographic exposure unrecorded in OpenStreetMap (neutral baseline applied).")
 
             explanation_parts = [
                 f"{name} ({place_type}) received a composite emergency priority score of {composite_score}/100 ({p_tier.value}).",

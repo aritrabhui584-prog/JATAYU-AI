@@ -7,7 +7,7 @@ Zero fabricated observations: inspects true satellite acquisitions only.
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 import httpx
 
 from app.config import METADATA_DIR, REQUEST_TIMEOUT, USER_AGENT
@@ -183,5 +183,19 @@ class Sentinel1Service(BaseDataService):
             "scene_count": len(scenes),
             "state": IngestionState.AVAILABLE.value
         }
+
+    def ingest_authentic_sar_pairs(self, aoi_bounds: Tuple[float, float, float, float] = (88.25, 26.50, 88.85, 27.75)) -> List[Path]:
+        """
+        Downloads and clips authentic pre-event and post-event Sentinel-1 IW VV GeoTIFFs
+        from Microsoft Planetary Computer STAC for the Teesta Basin corridor.
+        """
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+        from ingest_sar_live import TARGET_SCENES, fetch_and_clip_sar_scene
+        results = []
+        for s in TARGET_SCENES:
+            p = fetch_and_clip_sar_scene(s)
+            results.append(p)
+        return results
 
 sentinel1_service = Sentinel1Service()

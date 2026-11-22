@@ -17,8 +17,8 @@ export const ServiceStatusBadge: React.FC<ServiceStatusBadgeProps> = ({ state, s
         };
       case 'FETCHING':
         return {
-          bg: 'bg-cyan-950/70 border-cyan-700/60 text-cyan-300',
-          dot: 'bg-cyan-400 animate-pulse',
+          bg: 'bg-zinc-800 border-zinc-600 text-white',
+          dot: 'bg-white animate-pulse',
           label: 'FETCHING',
         };
       case 'AUTH_REQUIRED':
@@ -48,8 +48,8 @@ export const ServiceStatusBadge: React.FC<ServiceStatusBadgeProps> = ({ state, s
       case 'IDLE':
       default:
         return {
-          bg: 'bg-slate-900 border-slate-700 text-slate-400',
-          dot: 'bg-slate-500',
+          bg: 'bg-zinc-900 border-zinc-800 text-zinc-400',
+          dot: 'bg-zinc-500',
           label: 'IDLE (NOT INGESTED)',
         };
     }

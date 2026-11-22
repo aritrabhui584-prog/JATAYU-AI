@@ -16,6 +16,7 @@ from .isolation import router as isolation_router
 from .nightlight import router as nightlight_router
 from .priority import router as priority_router
 from .overview import router as overview_router
+from .terrain import router as terrain_router
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(aoi_router)
@@ -31,3 +32,4 @@ api_router.include_router(isolation_router)
 api_router.include_router(nightlight_router)
 api_router.include_router(priority_router)
 api_router.include_router(overview_router)
+api_router.include_router(terrain_router)

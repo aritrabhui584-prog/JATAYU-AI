@@ -52,7 +52,13 @@ def get_layer_geojson(layer_key: str):
         "osm_settlements": GEOJSON_DIR / "osm_settlements.geojson",
         "osm_waterways": GEOJSON_DIR / "osm_waterways.geojson",
         "osm_facilities": GEOJSON_DIR / "osm_facilities.geojson",
+        "osm_railways": GEOJSON_DIR / "osm_railways.geojson",
+        "hlz_landing_zones": GEOJSON_DIR / "hlz_landing_zones.geojson",
     }
+
+    if layer_key == "hlz_landing_zones":
+        from app.engines.terrain_engine import terrain_engine
+        return terrain_engine.detect_helicopter_landing_zones()
 
     target_file = file_map.get(layer_key)
     if not target_file:

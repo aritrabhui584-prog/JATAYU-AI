@@ -1,6 +1,53 @@
-backend/.venv/
-frontend/node_modules/
-frontend/dist/
+# Environment & Secret files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+*.pem
+*.key
+
+# Python & Virtual Environments
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
+.venv/
+backend/.venv/
+venv/
+ENV/
+
+# Node & Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.npm/
+
+# Satellite Rasters, HDF5, Heavy Caches & SQLite Databases
+backend/data/geotiff/
+backend/data/viirs/
+backend/data/dem/
+backend/data/sqlite/*.db
+*.tif
+*.tiff
+*.h5
+*.hdf5
+cache/
+scratch/
+backend/data/*.pdf
+backend/data/*.csv
+backend/data/geojson/viirs_*.geojson
+backend/data/geojson/isolation_*.geojson
+backend/data/geojson/flood_*.geojson
+backend/data/geojson/scout_*.geojson
+backend/data/geojson/emergency_priorities_*.geojson
+backend/data/geojson/scenario_*.geojson
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

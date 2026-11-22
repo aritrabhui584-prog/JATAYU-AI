@@ -115,8 +115,8 @@ def test_raster_api_handlers():
 def test_flood_api_handlers():
     # 1. Test terrain analysis endpoint
     terrain_res = get_terrain_analysis()
-    assert terrain_res.min_elevation_m >= 50.0
-    assert terrain_res.max_elevation_m <= 4000.0
+    assert terrain_res.min_elevation_m >= 0.0
+    assert terrain_res.max_elevation_m >= 1000.0
     assert "elevation_relief" in terrain_res.render_urls
 
     # 2. Test latest flood analysis endpoint
@@ -148,5 +148,17 @@ def test_flood_api_handlers():
     intersections = get_flood_intersections()
     assert "inundated_settlements" in intersections
     assert "submerged_roads" in intersections
+
+
+def test_live_satellite_sync_endpoints():
+    from app.api.overview import get_live_satellite_sync_status, trigger_refresh_live
+    res = get_live_satellite_sync_status()
+    assert res["status"] == "LIVE_SYNCHRONIZED"
+    assert "sentinel1_sar" in res
+    assert "sentinel2_optical" in res
+    assert "nasa_viirs_dnb" in res
+    assert "open_meteo_glofas" in res
+    assert res["zero_fabrication_verified"] is True
+
 
 

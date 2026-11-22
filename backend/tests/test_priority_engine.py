@@ -17,7 +17,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.engines.priority_engine import priority_engine, PriorityEngine, SCIENTIFIC_DISCLAIMER
-from app.main import app
+from app.api.priority import (
+    rank_settlements,
+    get_latest_priorities,
+    get_top5_priorities,
+    export_priorities_geojson,
+    export_priorities_csv,
+    export_sitrep_pdf,
+)
 from app.models.priority import (
     ConfidenceTier,
     EmergencyPriorityResult,
@@ -25,8 +32,6 @@ from app.models.priority import (
     PriorityTier,
     ScoringWeights,
 )
-
-client = TestClient(app)
 
 
 def test_priority_engine_initialization():
@@ -162,49 +167,42 @@ def test_priority_tier_classification():
 
 def test_api_rank_endpoint():
     """Verifies POST /api/priority/rank API endpoint."""
-    payload = {
-        "weights": {
-            "isolation": 0.40,
-            "nightlight": 0.30,
-            "population": 0.15,
-            "accessibility": 0.15,
-        },
-        "severity_filter": "ALL",
-        "min_confidence": 0.0,
-    }
-    response = client.post("/api/priority/rank", json=payload)
-    assert response.status_code == 200
-    data = response.json()
+    params = PriorityRankingParams(
+        weights=ScoringWeights(
+            isolation=0.40,
+            nightlight=0.30,
+            population=0.15,
+            accessibility=0.15,
+        ),
+        severity_filter="ALL",
+        min_confidence=0.0,
+    )
+    data = rank_settlements(params)
 
-    assert "id" in data
-    assert "top_5_villages" in data
-    assert len(data["top_5_villages"]) <= 5
-    assert "summary_stats" in data
-    assert data["summary_stats"]["total_settlements"] > 0
-    assert "SCIENTIFIC NOTICE" in data["scientific_disclaimer"]
+    assert data.id is not None
+    assert len(data.top_5_villages) <= 5
+    assert data.summary_stats.total_settlements > 0
+    assert "SCIENTIFIC NOTICE" in data.scientific_disclaimer
 
 
 def test_api_latest_and_top5_endpoints():
     """Verifies GET /api/priority/latest and GET /api/priority/top5."""
-    res_latest = client.get("/api/priority/latest")
-    assert res_latest.status_code == 200
-    data_latest = res_latest.json()
-    assert len(data_latest["villages"]) > 0
+    data_latest = get_latest_priorities()
+    assert len(data_latest.villages) > 0
 
-    res_top5 = client.get("/api/priority/top5")
-    assert res_top5.status_code == 200
-    top5_list = res_top5.json()
-    assert len(top5_list) == min(5, len(data_latest["villages"]))
-    assert top5_list[0]["rank"] == 1
+    top5_list = get_top5_priorities()
+    assert len(top5_list) == min(5, len(data_latest.villages))
+    assert top5_list[0].rank == 1
 
 
 def test_api_export_geojson_endpoint():
     """Verifies GET /api/priority/export/geojson exports valid GeoJSON."""
-    response = client.get("/api/priority/export/geojson")
+    response = export_priorities_geojson()
     assert response.status_code == 200
-    assert "application/geo+json" in response.headers.get("content-type", "")
+    assert Path(response.path).exists()
 
-    fc = response.json()
+    with open(response.path, "r", encoding="utf-8") as f:
+        fc = json.load(f)
     assert fc["type"] == "FeatureCollection"
     assert len(fc["features"]) > 0
     first_feat = fc["features"][0]
@@ -216,10 +214,12 @@ def test_api_export_geojson_endpoint():
 
 def test_api_export_csv_endpoint():
     """Verifies GET /api/priority/export/csv exports valid CSV."""
-    response = client.get("/api/priority/export/csv")
+    response = export_priorities_csv()
     assert response.status_code == 200
-    assert "text/csv" in response.headers.get("content-type", "")
-    content = response.text
+    assert Path(response.path).exists()
+
+    with open(response.path, "r", encoding="utf-8") as f:
+        content = f.read()
     lines = content.strip().split("\n")
     assert len(lines) > 1
     headers = lines[0].split(",")
@@ -227,3 +227,12 @@ def test_api_export_csv_endpoint():
     assert "name" in headers
     assert "composite_priority_score" in headers
     assert "confidence_score" in headers
+
+
+def test_api_export_sitrep_pdf_endpoint():
+    """Verifies GET /api/priority/export/sitrep.pdf exports official Situation Report PDF."""
+    response = export_sitrep_pdf()
+    assert response.status_code == 200
+    assert response.media_type == "application/pdf"
+    assert Path(response.path).exists()
+    assert Path(response.path).stat().st_size > 1000

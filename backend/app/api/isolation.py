@@ -13,11 +13,47 @@ from app.config import GEOJSON_DIR
 from app.engines.isolation_engine import isolation_engine
 from app.models.isolation import (
     EmergencyFacility,
+    MultiModalRescueResponse,
     RoadExposureParams,
     RoadIsolationAnalysisResult,
 )
 
 router = APIRouter(prefix="/isolation", tags=["Road Isolation & Accessibility"])
+
+@router.post("/multimodal-rescue", response_model=MultiModalRescueResponse)
+def compute_multimodal_rescue(params: Optional[RoadExposureParams] = None):
+    """
+    Computes pre-disaster multi-modal rescue plans (Roadway, Railway, Airway) before roads are blocked.
+    - Classifies edges into OPEN_SAFE, CLOSING_SOON (with time-to-closure), and SEVERED.
+    - Computes Fastest Pre-Closure Route (with 60-min safety buffer) vs High-Ground Flood-Safe Bypass.
+    - Connects settlements to Active Safe Railheads (NJP, Siliguri, Sevoke, etc.).
+    - Pairs settlements with nearest Pickup HLZ and calculates direct Air-Bridge flight sortie vectors to Bagdogra AFB.
+    """
+    try:
+        if params is None:
+            params = RoadExposureParams()
+        return isolation_engine.analyze_multimodal_rescue(params)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Multi-modal rescue calculation failed: {str(e)}")
+
+@router.get("/multimodal-rescue", response_model=MultiModalRescueResponse)
+def get_multimodal_rescue():
+    """Returns the latest multi-modal rescue plan or calculates a fresh baseline"""
+    latest = isolation_engine.get_latest_multimodal_result()
+    if latest:
+        return latest
+    try:
+        return isolation_engine.analyze_multimodal_rescue()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed generating baseline multi-modal rescue plan: {str(e)}")
+
+@router.get("/railways")
+def get_railway_infrastructure():
+    """Returns authentic Northeast Frontier Railway tracks, stations, and aerodromes in the AOI"""
+    try:
+        return isolation_engine.load_railway_infrastructure()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed loading railway infrastructure: {str(e)}")
 
 @router.post("/analyze", response_model=RoadIsolationAnalysisResult)
 def analyze_road_isolation(params: Optional[RoadExposureParams] = None):

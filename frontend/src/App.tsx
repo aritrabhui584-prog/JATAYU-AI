@@ -14,6 +14,8 @@ import { Navbar } from './components/Navbar';
 import { Sidebar, PageId } from './components/Sidebar';
 import { AOISelector } from './components/AOISelector';
 import { OverviewPage } from './pages/OverviewPage';
+import { UnifiedCommandMapPage } from './pages/UnifiedCommandMapPage';
+import { IndiaSurveillanceGridPage } from './pages/IndiaSurveillanceGridPage';
 import { LiveMapPage } from './pages/LiveMapPage';
 import { SatellitePage } from './pages/SatellitePage';
 import { FloodAnalysisPage } from './pages/FloodAnalysisPage';
@@ -28,6 +30,17 @@ export const App: React.FC = () => {
   const [activeAOI, setActiveAOI] = useState<AOIConfig | null>(null);
   const [presets, setPresets] = useState<AOIPreset[]>([]);
   const [isAOIModalOpen, setIsAOIModalOpen] = useState(false);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('jatayu-theme') as 'dark' | 'light') || 'dark';
+  });
+
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('jatayu-theme', next);
+      return next;
+    });
+  };
 
   // Data states
   const [servicesStatus, setServicesStatus] = useState<ServiceStatus[]>([]);
@@ -36,7 +49,10 @@ export const App: React.FC = () => {
     osm_roads?: any;
     osm_settlements?: any;
     osm_waterways?: any;
+    osm_facilities?: any;
+    osm_railways?: any;
     aoi_corridor?: any;
+    hlz_landing_zones?: any;
   }>({});
   const [roadStats, setRoadStats] = useState<RoadNetworkStats | null>(null);
   const [isolationData, setIsolationData] = useState<SettlementIsolationResponse | null>(null);
@@ -83,10 +99,13 @@ export const App: React.FC = () => {
       const aoiGeo = await api.fetchLayerGeoJSON('aoi_corridor').catch(() => null);
 
       // Attempt to load cached layers if already ingested
-      const [roads, settlements, waterways] = await Promise.all([
+      const [roads, settlements, waterways, facilities, railways, hlz] = await Promise.all([
         api.fetchLayerGeoJSON('osm_roads').catch(() => null),
         api.fetchLayerGeoJSON('osm_settlements').catch(() => null),
         api.fetchLayerGeoJSON('osm_waterways').catch(() => null),
+        api.fetchLayerGeoJSON('osm_facilities').catch(() => null),
+        api.fetchLayerGeoJSON('osm_railways').catch(() => null),
+        api.fetchHelicopterLandingZones().catch(() => null),
       ]);
 
       setLayersData({
@@ -94,6 +113,9 @@ export const App: React.FC = () => {
         osm_roads: roads,
         osm_settlements: settlements,
         osm_waterways: waterways,
+        osm_facilities: facilities,
+        osm_railways: railways,
+        hlz_landing_zones: hlz,
       });
 
       // Load secondary intelligence
@@ -223,22 +245,32 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col antialiased">
+    <div className={`min-h-screen flex flex-col antialiased transition-colors duration-200 ${
+      theme === 'light' ? 'theme-briefing-light bg-white text-zinc-950' : 'theme-command-dark bg-[#050505] text-white'
+    }`}>
       {/* Top Navbar */}
       <Navbar
         activeAOI={activeAOI}
         onRefresh={loadInitialData}
         isRefreshing={isRefreshing}
         onOpenAOIModal={() => setIsAOIModalOpen(true)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Main Layout */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Navigation Sidebar */}
+      <div className="flex-1 flex overflow-hidden relative w-full">
+        {/* Navigation Sidebar (Auto-Hiding Floating Overlay) */}
         <Sidebar currentPage={currentPage} onSelectPage={setCurrentPage} />
 
-        {/* Content Pane */}
-        <main className="flex-1 overflow-y-auto bg-slate-950 p-6 relative">
+        {/* Content Pane - Edge-to-Edge 100vw Workspace */}
+        <main
+          className={`flex-1 ${
+            ['command-map', 'india-surveillance', 'map'].includes(currentPage)
+              ? 'p-0 overflow-hidden'
+              : 'p-6 overflow-y-auto'
+          } bg-[#050505] relative w-full h-[calc(100vh-4rem)]`}
+        >
           {/* Notification Toast */}
           {notification && (
             <div
@@ -246,7 +278,7 @@ export const App: React.FC = () => {
                 ? 'bg-emerald-950/90 border-emerald-700 text-emerald-200'
                 : notification.type === 'error'
                   ? 'bg-rose-950/90 border-rose-700 text-rose-200'
-                  : 'bg-cyan-950/90 border-cyan-700 text-cyan-200'
+                  : 'bg-zinc-900/90 border-zinc-700 text-zinc-200'
                 }`}
             >
               {notification.type === 'success' ? (
@@ -282,6 +314,17 @@ export const App: React.FC = () => {
             />
           )}
 
+          {currentPage === 'command-map' && (
+            <UnifiedCommandMapPage
+              activeAOI={activeAOI}
+              layersData={layersData}
+            />
+          )}
+
+          {currentPage === 'india-surveillance' && (
+            <IndiaSurveillanceGridPage />
+          )}
+
           {currentPage === 'map' && (
             <LiveMapPage
               activeAOI={activeAOI}
@@ -315,6 +358,7 @@ export const App: React.FC = () => {
             <VillageIsolationPage
               isolationData={isolationData}
               roadStats={roadStats}
+              layersData={layersData}
               onRefreshIsolation={() => handleTriggerService('osm')}
               isLoading={loadingService === 'osm'}
               activeAOI={activeAOI}

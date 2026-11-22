@@ -19,6 +19,7 @@ from PIL import Image
 import rasterio
 from rasterio.enums import Resampling
 from rasterio.features import rasterize, shapes
+import scipy.ndimage
 from shapely.geometry import Point, LineString, Polygon, MultiPolygon, shape, mapping, box
 from shapely.ops import unary_union
 import geopandas as gpd
@@ -74,12 +75,10 @@ class FloodEngine:
         """
         h, w = shape_hw
         if not waterway_geoms:
-            # Fallback based on typical Teesta River corridor longitude in this sector
-            lons = np.linspace(transform.c, transform.c + w * transform.a, w)
-            lats = np.linspace(transform.f, transform.f + h * transform.e, h)
-            lon_grid, lat_grid = np.meshgrid(lons, lats)
-            river_path = 88.46 + 0.02 * np.sin((lat_grid - 26.85) * 30.0)
-            return (np.abs(lon_grid - river_path) < 0.006)
+            raise FileNotFoundError(
+                "WATERWAYS_UNAVAILABLE: Genuine OSM waterway geometries not found in data/geojson/osm_waterways.geojson. "
+                "Trigger OSM waterway ingestion before calculating permanent water masks."
+            )
 
         buffered_shapes = []
         for geom in waterway_geoms:
@@ -109,18 +108,43 @@ class FloodEngine:
         active_aoi = aoi_engine.get_active_aoi()
         aoi_bbox = (active_aoi.bbox.min_lon, active_aoi.bbox.min_lat, active_aoi.bbox.max_lon, active_aoi.bbox.max_lat)
 
+        # Helper to resolve GeoTIFF path across GEOTIFF_DIR and sar subfolder
+        def _resolve_tif(scene_id: Optional[str]) -> Optional[Path]:
+            if not scene_id:
+                return None
+            from app.config import LIVE_GEOTIFF_DIR
+            candidates = [
+                LIVE_GEOTIFF_DIR / f"{scene_id}_wgs84_clipped.tif",
+                LIVE_GEOTIFF_DIR / f"{scene_id}.tif",
+                GEOTIFF_DIR / f"{scene_id}_wgs84_clipped.tif",
+                GEOTIFF_DIR / f"{scene_id}_wgs84.tif",
+                GEOTIFF_DIR / f"{scene_id}.tif",
+                GEOTIFF_DIR / "sar" / f"{scene_id}.tif",
+                GEOTIFF_DIR / "sar" / f"{scene_id}_wgs84.tif",
+                GEOTIFF_DIR / "sar" / f"{scene_id}",
+            ]
+            for c in candidates:
+                if c.exists():
+                    return c
+            rec = metadata_engine.get_scene_record(scene_id)
+            if rec and rec.geotiff_path:
+                p = Path(rec.geotiff_path)
+                if not p.is_absolute():
+                    p = GEOTIFF_DIR.parent.parent / p
+                if p.exists():
+                    return p
+            return None
+
         # 1. Ensure Post-Event GeoTIFF exists
-        post_tif = GEOTIFF_DIR / f"{params.post_event_scene_id}_wgs84.tif"
-        if not post_tif.exists():
-            raster_engine.create_sample_sentinel_scene(
-                output_geotiff_path=post_tif,
-                mission="Sentinel-1",
-                crs_epsg=4326,
-                bbox=aoi_bbox
+        post_tif = _resolve_tif(params.post_event_scene_id)
+        if not post_tif:
+            raise FileNotFoundError(
+                f"DATA_UNAVAILABLE: Post-event Sentinel-1 GeoTIFF '{params.post_event_scene_id}' not found in {GEOTIFF_DIR} or {GEOTIFF_DIR}/sar. "
+                f"Download or import genuine Sentinel-1 SAR imagery before running flood analysis."
             )
 
         # 2. Ensure DEM exists and load it
-        dem_tif = terrain_engine.create_or_load_teesta_dem(bbox=aoi_bbox)
+        dem_tif = terrain_engine.get_teesta_dem()
         dem_info = terrain_engine.load_dem(dem_tif)
         ele = dem_info["elevation"]
         transform = dem_info["transform"]
@@ -147,30 +171,39 @@ class FloodEngine:
         post_db[valid_sar] = 10.0 * np.log10(np.square(raw_sar[valid_sar]) + 1e-6) - 83.0
         post_db = np.clip(post_db, -35.0, 5.0)
 
-        # 3x3 uniform speckle filter
-        post_db = raster_engine._apply_speckle_filter(post_db, kernel_size=3)
+        # Adaptive Lee speckle filter for boundary-preserving noise suppression
+        post_db = raster_engine._apply_lee_filter(post_db, kernel_size=5)
 
         # 4. Pre-event change detection if pre-event scene provided
         delta_db = np.zeros_like(post_db)
         has_pre_event = False
         if params.pre_event_scene_id:
-            pre_tif = GEOTIFF_DIR / f"{params.pre_event_scene_id}_wgs84.tif"
-            if pre_tif.exists():
+            pre_tif = _resolve_tif(params.pre_event_scene_id)
+            if pre_tif:
                 with rasterio.open(pre_tif) as src_pre:
                     raw_pre = src_pre.read(1, out_shape=(h, w), resampling=Resampling.bilinear).astype(np.float32)
                 pre_valid = (raw_pre > 0)
                 pre_db = np.zeros_like(raw_pre)
                 pre_db[pre_valid] = 10.0 * np.log10(np.square(raw_pre[pre_valid]) + 1e-6) - 83.0
-                pre_db = raster_engine._apply_speckle_filter(pre_db, kernel_size=3)
+                pre_db = raster_engine._apply_lee_filter(pre_db, kernel_size=5)
                 delta_db = post_db - pre_db
                 has_pre_event = True
 
         # 5. Core Multi-Criteria Flood Classification
+        # Adaptive Otsu thresholding on low-lying basin
+        feasible_terrain = (slope <= params.slope_max_degrees) & (ele <= params.elevation_max_m)
+        if params.backscatter_threshold_db == -16.0:
+            lowland_vals = post_db[valid_sar & feasible_terrain]
+            otsu_th = raster_engine.compute_otsu_threshold(lowland_vals)
+            chosen_th = otsu_th if otsu_th < -14.0 else params.backscatter_threshold_db
+        else:
+            chosen_th = params.backscatter_threshold_db
+
         # Candidate water: specular low backscatter OR significant change drop
         if has_pre_event:
-            candidate_water = valid_sar & ((post_db < params.backscatter_threshold_db) | (delta_db < params.change_threshold_db))
+            candidate_water = valid_sar & ((post_db < chosen_th) | (delta_db < params.change_threshold_db))
         else:
-            candidate_water = valid_sar & (post_db < params.backscatter_threshold_db)
+            candidate_water = valid_sar & (post_db < chosen_th)
 
         # Terrain accumulation feasibility: water cannot pool on steep slopes or above flood basin elevation
         feasible_terrain = (slope <= params.slope_max_degrees) & (ele <= params.elevation_max_m)
@@ -316,7 +349,7 @@ class FloodEngine:
         active_aoi = aoi_engine.get_active_aoi()
         aoi_bbox = (active_aoi.bbox.min_lon, active_aoi.bbox.min_lat, active_aoi.bbox.max_lon, active_aoi.bbox.max_lat)
 
-        dem_tif = terrain_engine.create_or_load_teesta_dem(bbox=aoi_bbox)
+        dem_tif = terrain_engine.get_teesta_dem()
         dem_info = terrain_engine.load_dem(dem_tif)
         ele = dem_info["elevation"]
         transform = dem_info["transform"]
@@ -339,12 +372,10 @@ class FloodEngine:
         # Topographic inundation model:
         # Low-lying terrain contiguous to the river corridor whose elevation <= baseline + delta_h
         # and slope <= 6 degrees (flat floodplains)
-        # Distance proxy from river channel (within ~1.5 km of river)
-        lons = np.linspace(transform.c, transform.c + w * transform.a, w)
-        lats = np.linspace(transform.f, transform.f + h * transform.e, h)
-        lon_grid, lat_grid = np.meshgrid(lons, lats)
-        river_center_lon = 88.46 + 0.02 * np.sin((lat_grid - 26.85) * 30.0)
-        dist_from_river = np.abs(lon_grid - river_center_lon)
+        # Compute exact spatial distance from genuine OSM river channel using Euclidean distance transform
+        dist_pixels = scipy.ndimage.distance_transform_edt(~perm_water_mask)
+        res_deg = abs(transform.a)
+        dist_from_river = dist_pixels * res_deg
 
         modelled_flood = (
             ~perm_water_mask

@@ -5,17 +5,19 @@ Multi-Temporal Baseline Compositing, Percentage Reduction, Spatial Clustering,
 and 500m Resolution Scientific Attribution.
 
 Zero synthetic hallucinations:
-- Strict NASA Black Marble VNP46A2 HDF-EOS5 schema
-- Mandatory_Quality_Flag cloud and stray light screening
+- Strict NASA Black Marble VNP46A2 HDF-EOS5 schema (v2.0 VIIRS_Grid_DNB_2d and legacy VNP_Grid_DNB)
+- Mandatory_Quality_Flag cloud and stray light screening (0 = High Quality, 1-5 = Masked)
 - Explicit 15 arc-second (~500m) spatial resolution accounting
 - Prohibition against automatically claiming power outages from radiance alone
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
 import logging
 import math
+import os
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import h5py
@@ -28,6 +30,8 @@ import scipy.ndimage
 from shapely.geometry import Polygon, shape
 
 from app.config import GEOJSON_DIR, GEOTIFF_DIR, RENDERS_DIR, VIIRS_DIR
+from app.engines.aoi_engine import aoi_engine
+from app.models.aoi import BoundingBox
 from app.models.nightlight import (
     NightlightAnalysisParams,
     NightlightAnalysisResult,
@@ -38,160 +42,220 @@ from app.models.nightlight import (
 logger = logging.getLogger(__name__)
 
 # NASA Black Marble VNP46A2 HDF5 dataset paths
-HDF_RADIANCE_PATH = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/DNB_BRDF-Corrected_NTL"
-HDF_QUALITY_PATH = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/Mandatory_Quality_Flag"
-HDF_SNOW_PATH = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/Snow_Flag"
-HDF_CLOUD_PATH = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/Cloud_Mask_Quality"
+HDF_RADIANCE_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/DNB_BRDF-Corrected_NTL"
+HDF_GAP_FILLED_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/Gap_Filled_DNB_BRDF-Corrected_NTL"
+HDF_QUALITY_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/Mandatory_Quality_Flag"
+HDF_SNOW_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/Snow_Flag"
+HDF_LAT_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/lat"
+HDF_LON_PATH_V2 = "HDFEOS/GRIDS/VIIRS_Grid_DNB_2d/Data Fields/lon"
 
-# Default Area of Interest: Teesta River Corridor Middle Gorge
-# South: 26.75°N, West: 88.35°E, North: 27.05°N, East: 88.65°E
-# At 15 arc-seconds (0.00416667 deg) per pixel -> 72 x 72 grid (~500m resolution)
-DEFAULT_BOUNDS = [26.75, 88.35, 27.05, 88.65]  # [south, west, north, east]
-PIXEL_SIZE_DEG = 15.0 / 3600.0  # 0.004166666666666667 degrees (~460-500m)
+# Legacy fallback paths (v1 / synthetic)
+HDF_RADIANCE_PATH_V1 = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/DNB_BRDF-Corrected_NTL"
+HDF_QUALITY_PATH_V1 = "HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields/Mandatory_Quality_Flag"
+
+PIXEL_SIZE_DEG = 15.0 / 3600.0  # 15 arc-seconds (~460-500m)
+
+
+def _to_float(val: Any, default: float = 0.0) -> float:
+    """Safely converts 0-d or 1-d numpy arrays/attributes to native python float."""
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        return float(val)
+    if hasattr(val, "item"):
+        try:
+            return float(val.item())
+        except Exception:
+            pass
+    try:
+        arr = np.asarray(val)
+        return float(arr.flat[0])
+    except Exception:
+        return default
+
+
+def _parse_h5_date(h5_path: Path, f: h5py.File) -> Tuple[str, str]:
+    """Extracts ISO date (YYYY-MM-DD) and Julian string from filename or HDF attributes."""
+    m = re.search(r"A(\d{4})(\d{3})", h5_path.name)
+    if m:
+        year, doy = int(m.group(1)), int(m.group(2))
+        dt = datetime(year, 1, 1, tzinfo=timezone.utc) + timedelta(days=doy - 1)
+        return dt.strftime("%Y-%m-%d"), f"A{year}{doy:03d}"
+
+    raw_date = f.attrs.get("RangeBeginningDate") or f.attrs.get("ObservationDate")
+    if isinstance(raw_date, bytes):
+        raw_date = raw_date.decode("utf-8")
+    raw_julian = f.attrs.get("JulianDay", "A2023274")
+    if isinstance(raw_julian, bytes):
+        raw_julian = raw_julian.decode("utf-8")
+
+    return str(raw_date or "2023-10-01"), str(raw_julian)
+
+
+def _get_ds(f: h5py.File, candidate_paths: List[str]):
+    for p in candidate_paths:
+        if p in f:
+            return f[p]
+    return None
+
+
+def resolve_intersecting_viirs_tiles(bbox: BoundingBox) -> List[str]:
+    """
+    Computes all NASA MODIS/VIIRS Land Grid 10°x10° tile identifiers (hXXvYY)
+    overlapping the given geographic bounding box anywhere across India or globally.
+    h = floor((lon + 180) / 10)  (range 0-35)
+    v = floor((90 - lat) / 10)   (range 0-17)
+    """
+    h_min = int(math.floor((bbox.min_lon + 180.0) / 10.0))
+    h_max = int(math.floor((bbox.max_lon + 180.0) / 10.0))
+    v_min = int(math.floor((90.0 - bbox.max_lat) / 10.0))
+    v_max = int(math.floor((90.0 - bbox.min_lat) / 10.0))
+
+    tiles = []
+    for h in range(h_min, h_max + 1):
+        for v in range(v_min, v_max + 1):
+            tiles.append(f"h{h:02d}v{v:02d}")
+    return sorted(list(set(tiles)))
+
 
 class NightlightEngine:
     def __init__(self, viirs_dir: Path = VIIRS_DIR):
         self.viirs_dir = viirs_dir
         self.viirs_dir.mkdir(parents=True, exist_ok=True)
         self._last_result: Optional[NightlightAnalysisResult] = None
-        self._ensure_reference_vnp46a2_dataset()
 
     def get_latest_result(self) -> Optional[NightlightAnalysisResult]:
         return self._last_result
 
-    def _ensure_reference_vnp46a2_dataset(self):
-        """
-        Ensures reference NASA Black Marble VNP46A2 HDF5 files are available
-        in the data/viirs directory for the historical October 2023 Teesta cloudburst/GLOF timeline.
-        """
-        scenes_def = [
-            ("2023-10-01", "A2023274", "pre_baseline_1", False),
-            ("2023-10-02", "A2023275", "pre_baseline_2", False),
-            ("2023-10-03", "A2023276", "pre_baseline_3", False),
-            ("2023-10-04", "A2023277", "post_flood_cloudy", True),  # Heavy clouds during flood peak
-            ("2023-10-05", "A2023278", "post_flood_clear", False),   # Cleared skies showing true light loss
-        ]
-
-        for date_str, julian, label, is_cloudy in scenes_def:
-            fname = f"VNP46A2.{julian}.h26v06.001.{date_str.replace('-', '')}.h5"
-            h5_path = self.viirs_dir / fname
-            if not h5_path.exists():
-                self._create_vnp46a2_hdf5_file(h5_path, date_str, julian, label, is_cloudy)
-
-    def _create_vnp46a2_hdf5_file(
+    def download_latest_viirs_granules(
         self,
-        h5_path: Path,
-        date_str: str,
-        julian_str: str,
-        label: str,
-        is_cloudy: bool
-    ):
+        bbox: Optional[BoundingBox] = None,
+        max_granules: int = 3,
+    ) -> List[Dict[str, Any]]:
         """
-        Creates a structurally genuine NASA Black Marble VNP46A2 HDF-EOS5 file
-        covering the Teesta River Basin at 15 arc-second (~500m) resolution.
+        Discovers and downloads authentic NASA VIIRS Black Marble VNP46A2 HDF5 granules
+        for the active bounding box from NASA CMR using EARTHDATA_TOKEN.
+        Zero synthetic data: fetches genuine NASA HDF-EOS5 files only.
         """
-        h, w = 72, 72  # 0.3 deg span at 15 arc-sec = 72 pixels
-        lats = np.linspace(DEFAULT_BOUNDS[2], DEFAULT_BOUNDS[0], h)
-        lons = np.linspace(DEFAULT_BOUNDS[1], DEFAULT_BOUNDS[3], w)
-        lon_grid, lat_grid = np.meshgrid(lons, lats)
+        if bbox is None:
+            active_aoi = aoi_engine.get_active_aoi()
+            bbox = active_aoi.bbox
 
-        # Base human settlement radiance:
-        # Siliguri / Sevoke plains in south (bright), Teesta gorge canyon settlements in middle (moderate),
-        # forested steep ridges (unlit background).
-        # Radiance in nW/(cm^2 sr)
-        radiance = np.zeros((h, w), dtype=np.float32)
+        token = os.getenv("EARTHDATA_TOKEN", "").strip()
+        if not token:
+            from app.config import BASE_DIR
+            from dotenv import dotenv_values
+            env_vals = dotenv_values(BASE_DIR / ".env")
+            token = env_vals.get("EARTHDATA_TOKEN", "").strip()
 
-        # 1. Background dark mountain forest: 0.1 to 0.8 nW (natural airglow / dark noise)
-        radiance += 0.4 + 0.2 * np.sin(lat_grid * 50.0)
+        if not token:
+            logger.warning("EARTHDATA_TOKEN not configured in environment or backend/.env")
+            return []
 
-        # 2. Southern Plains & Sevoke Corridor (Lat 26.75 to 26.88): 12.0 to 38.0 nW
-        south_mask = (lat_grid < 26.89) & (lon_grid > 88.42) & (lon_grid < 88.58)
-        radiance[south_mask] += 18.0 + 8.0 * np.cos((lon_grid[south_mask] - 88.48) * 40.0)
+        target_tiles = resolve_intersecting_viirs_tiles(bbox)
+        logger.info(f"Searching NASA CMR for VNP46A2 granules in tiles: {target_tiles}, bbox: [{bbox.min_lon}, {bbox.min_lat}, {bbox.max_lon}, {bbox.max_lat}]")
 
-        # 3. Teesta Gorge Highway settlements (Sevoke, Rambhi, Teesta Bazar along river ~ 88.46): 6.0 to 18.0 nW
-        gorge_corridor = (np.abs(lon_grid - 88.46) < 0.02) & (lat_grid >= 26.88)
-        radiance[gorge_corridor] += 12.5 + 4.0 * np.sin(lat_grid[gorge_corridor] * 30.0)
+        cmr_url = (
+            f"https://cmr.earthdata.nasa.gov/search/granules.json?"
+            f"short_name=VNP46A2&bounding_box={bbox.min_lon},{bbox.min_lat},{bbox.max_lon},{bbox.max_lat}"
+            f"&page_size={max_granules}&sort_key=-start_date"
+        )
 
-        # 4. Kalimpong Foothills (Lat ~ 27.02, Lon ~ 88.50): 10.0 to 22.0 nW
-        kalimpong_area = (np.abs(lat_grid - 27.02) < 0.025) & (np.abs(lon_grid - 88.50) < 0.025)
-        radiance[kalimpong_area] += 15.0
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "JatayuAI-DisasterIntelligence/1.0 (+https://github.com/jatayu-ai)",
+        }
 
-        # Quality flag: 0 = High Quality, 1 = Good Quality, 2 = Poor Quality, 255 = Cloud/Fill
-        quality_flag = np.zeros((h, w), dtype=np.uint8)
+        downloaded_records = []
+        try:
+            import httpx
+            with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+                resp = client.get(cmr_url, headers=headers)
+                if resp.status_code != 200:
+                    logger.warning(f"CMR search failed with status {resp.status_code}")
+                    return []
 
-        if is_cloudy:
-            # Overcast cloud system over the northern mountain half (Lat > 26.85)
-            cloud_region = (lat_grid > 26.85) & (lat_grid < 27.04)
-            quality_flag[cloud_region] = 255  # Cloud masked!
-            # Under thick clouds, VIIRS cannot retrieve surface radiance
-            radiance[cloud_region] = 0.0
-        elif label == "post_flood_clear":
-            # Clear post-disaster night (2023-10-05):
-            # Flood inundation along the Teesta canyon caused severe infrastructure failure / curfew:
-            # Sevoke, Teesta Bazar, and Bagrakote corridors experience significant light loss (60-80% drop)
-            flooded_corridor = (np.abs(lon_grid - 88.46) < 0.018) & (lat_grid >= 26.86) & (lat_grid <= 27.04)
-            radiance[flooded_corridor] *= 0.25  # 75% radiance drop
+                data = resp.json()
+                entries = data.get("feed", {}).get("entry", [])
 
-            # Bagrakote eastern foothill sector:
-            bagrakote_sector = (np.abs(lat_grid - 26.88) < 0.015) & (np.abs(lon_grid - 88.58) < 0.02)
-            radiance[bagrakote_sector] *= 0.30  # 70% drop
+                for entry in entries:
+                    h5_links = [
+                        l["href"]
+                        for l in entry.get("links", [])
+                        if l.get("href", "").endswith(".h5") and not l.get("href", "").endswith(".xml")
+                    ]
+                    if not h5_links:
+                        continue
 
-            # Minor poor-quality stray light edge on top 3 rows
-            quality_flag[:3, :] = 2
-        else:
-            # Pre-baseline slight noise variation (±0.5 nW)
-            day_noise = np.sin(lon_grid * 100.0 + float(julian_str[-3:])) * 0.4
-            radiance = np.clip(radiance + day_noise, 0.1, 55.0)
+                    h5_url = h5_links[0]
+                    filename = h5_url.split("/")[-1]
+                    dest_path = self.viirs_dir / filename
 
-        # Convert to VNP46A2 storage: radiance * 10 (uint16)
-        # Fill Value = 65535
-        dn = np.round(np.clip(radiance * 10.0, 0, 65530)).astype(np.uint16)
-        if is_cloudy:
-            cloud_region = (lat_grid > 26.85) & (lat_grid < 27.04)
-            dn[cloud_region] = 65535
+                    if dest_path.exists() and dest_path.stat().st_size > 1000000:
+                        logger.info(f"VIIRS granule already exists locally: {filename}")
+                        downloaded_records.append({
+                            "filename": filename,
+                            "path": str(dest_path),
+                            "status": "ALREADY_PRESENT",
+                            "granule_id": entry.get("id"),
+                            "time_start": entry.get("time_start"),
+                        })
+                        continue
 
-        # Write HDF5
-        with h5py.File(h5_path, "w") as f:
-            # Create HDF-EOS group structure
-            grid_group = f.create_group("HDFEOS/GRIDS/VNP_Grid_DNB/Data Fields")
+                    logger.info(f"Downloading authentic NASA VIIRS granule: {filename} from {h5_url}")
+                    temp_path = self.viirs_dir / f"{filename}.tmp"
+                    with client.stream("GET", h5_url, headers=headers) as stream_resp:
+                        if stream_resp.status_code == 200:
+                            with open(temp_path, "wb") as f_out:
+                                for chunk in stream_resp.iter_bytes(chunk_size=1048576):
+                                    f_out.write(chunk)
+                            # Verify HDF5 file integrity
+                            try:
+                                with h5py.File(temp_path, "r") as test_h5:
+                                    _ = list(test_h5.keys())
+                                if temp_path.exists():
+                                    if dest_path.exists():
+                                        dest_path.unlink()
+                                    temp_path.rename(dest_path)
+                                logger.info(f"Successfully downloaded and verified {filename} ({dest_path.stat().st_size} bytes)")
+                                downloaded_records.append({
+                                    "filename": filename,
+                                    "path": str(dest_path),
+                                    "status": "DOWNLOADED_AUTHENTIC",
+                                    "granule_id": entry.get("id"),
+                                    "time_start": entry.get("time_start"),
+                                })
+                            except Exception as h5_err:
+                                logger.error(f"Downloaded file {filename} corrupted: {h5_err}")
+                                if temp_path.exists():
+                                    temp_path.unlink()
+                        else:
+                            logger.warning(f"Download of {filename} failed with HTTP {stream_resp.status_code}")
+                            if temp_path.exists():
+                                temp_path.unlink()
 
-            ds_ntl = grid_group.create_dataset("DNB_BRDF-Corrected_NTL", data=dn, compression="gzip")
-            ds_ntl.attrs["scale_factor"] = 0.1
-            ds_ntl.attrs["_FillValue"] = np.uint16(65535)
-            ds_ntl.attrs["units"] = "nW cm-2 sr-1"
-            ds_ntl.attrs["long_name"] = "BRDF-Corrected Day/Night Band Nighttime Radiance"
+        except Exception as e:
+            logger.error(f"Error querying/downloading VIIRS granules: {e}", exc_info=True)
 
-            ds_qf = grid_group.create_dataset("Mandatory_Quality_Flag", data=quality_flag, compression="gzip")
-            ds_qf.attrs["long_name"] = "Mandatory Quality Flag (0: High, 1: Good, 2: Poor, 255: Cloud/Fill)"
-            ds_qf.attrs["_FillValue"] = np.uint8(255)
+        return downloaded_records
 
-            grid_group.create_dataset("Snow_Flag", data=np.zeros((h, w), dtype=np.uint8))
-            grid_group.create_dataset("Cloud_Mask_Quality", data=np.zeros((h, w), dtype=np.uint16))
+    def list_available_observations(self, bbox: Optional[BoundingBox] = None) -> List[VIIRSObservationMetadata]:
+        """Scans the VIIRS directory and inspects all VNP46A2 HDF5 files matching active AOI tiles"""
+        if bbox is None:
+            active_aoi = aoi_engine.get_active_aoi()
+            bbox = active_aoi.bbox
 
-            # Root attributes
-            f.attrs["WestBoundingCoord"] = DEFAULT_BOUNDS[1]
-            f.attrs["EastBoundingCoord"] = DEFAULT_BOUNDS[3]
-            f.attrs["NorthBoundingCoord"] = DEFAULT_BOUNDS[2]
-            f.attrs["SouthBoundingCoord"] = DEFAULT_BOUNDS[0]
-            f.attrs["PixelSize"] = PIXEL_SIZE_DEG
-            f.attrs["SpatialResolution"] = "15 arc-seconds (~500m)"
-            f.attrs["Platform"] = "Suomi-NPP"
-            f.attrs["Sensor"] = "VIIRS"
-            f.attrs["Product"] = "VNP46A2"
-            f.attrs["ObservationDate"] = date_str
-            f.attrs["JulianDay"] = julian_str
-
-        logger.info(f"Initialized real NASA VNP46A2 HDF5 at {h5_path}")
-
-    def list_available_observations(self) -> List[VIIRSObservationMetadata]:
-        """Scans the VIIRS directory and inspects all VNP46A2 HDF5 files"""
+        target_tiles = resolve_intersecting_viirs_tiles(bbox)
         h5_files = sorted(self.viirs_dir.glob("*.h5"))
         metadata_list = []
 
         for p in h5_files:
-            meta = self.inspect_vnp46a2_file(p)
-            if meta:
-                metadata_list.append(meta)
+            # Check if file belongs to any target tile
+            tile_match = any(t in p.name for t in target_tiles)
+            if tile_match or not target_tiles:
+                meta = self.inspect_vnp46a2_file(p)
+                if meta:
+                    metadata_list.append(meta)
 
         return metadata_list
 
@@ -202,31 +266,64 @@ class NightlightEngine:
 
         try:
             with h5py.File(h5_path, "r") as f:
-                # Resolve dataset paths
-                if HDF_RADIANCE_PATH in f:
-                    ds_ntl = f[HDF_RADIANCE_PATH]
-                    ds_qf = f[HDF_QUALITY_PATH]
-                else:
-                    # Fallback lookup
-                    ds_ntl = f["DNB_BRDF-Corrected_NTL"]
-                    ds_qf = f["Mandatory_Quality_Flag"]
+                ds_ntl = _get_ds(
+                    f,
+                    [
+                        HDF_RADIANCE_PATH_V2,
+                        HDF_RADIANCE_PATH_V1,
+                        "DNB_BRDF-Corrected_NTL",
+                    ],
+                )
+                ds_qf = _get_ds(
+                    f,
+                    [
+                        HDF_QUALITY_PATH_V2,
+                        HDF_QUALITY_PATH_V1,
+                        "Mandatory_Quality_Flag",
+                    ],
+                )
+
+                if ds_ntl is None or ds_qf is None:
+                    logger.error(f"Required datasets missing in {h5_path}")
+                    return None
 
                 dn = ds_ntl[:]
                 qf = ds_qf[:]
-                scale = float(ds_ntl.attrs.get("scale_factor", 0.1))
-                fill_val = int(ds_ntl.attrs.get("_FillValue", 65535))
+                scale = _to_float(ds_ntl.attrs.get("scale_factor"), 1.0)
+                fill_val = _to_float(ds_ntl.attrs.get("_FillValue"), -999.9)
 
                 total_pixels = int(dn.size)
-                fill_pixels = int(np.sum(dn == fill_val))
-                cloud_pixels = int(np.sum((qf == 255) | (dn == fill_val)))
-                poor_pixels = int(np.sum(qf == 2))
-                valid_pixels = int(np.sum((qf == 0) | (qf == 1)))
+                # Fill / missing data
+                fill_pixels = int(np.sum((dn <= -900.0) | (dn == fill_val)))
+                # Quality flag: 0 = high quality, 1-5 = poor/cloud, 255 = fill
+                cloud_pixels = int(np.sum((qf >= 1) | (dn <= -900.0)))
+                poor_pixels = int(np.sum((qf >= 1) & (qf <= 5)))
+                valid_mask = (qf == 0) & (dn >= 0.0)
+                valid_pixels = int(np.sum(valid_mask))
 
-                valid_rad = dn[(qf == 0) | (qf == 1)] * scale
-                mean_rad = float(np.mean(valid_rad)) if valid_rad.size > 0 else 0.0
+                valid_rad = dn[valid_mask] * scale
+                mean_rad = float(np.mean(valid_rad)) if valid_pixels > 0 else 0.0
 
-                date_str = str(f.attrs.get("ObservationDate", "2023-10-01"))
-                julian_str = str(f.attrs.get("JulianDay", "A2023274"))
+                date_str, julian_str = _parse_h5_date(h5_path, f)
+
+                active_aoi = aoi_engine.get_active_aoi()
+                aoi_bounds = [
+                    active_aoi.bbox.min_lat,
+                    active_aoi.bbox.min_lon,
+                    active_aoi.bbox.max_lat,
+                    active_aoi.bbox.max_lon,
+                ]
+
+                s_b = f.attrs.get("SouthBoundingCoord")
+                w_b = f.attrs.get("WestBoundingCoord")
+                n_b = f.attrs.get("NorthBoundingCoord")
+                e_b = f.attrs.get("EastBoundingCoord")
+
+                s_bound = _to_float(s_b, aoi_bounds[0])
+                w_bound = _to_float(w_b, aoi_bounds[1])
+                n_bound = _to_float(n_b, aoi_bounds[2])
+                e_bound = _to_float(e_b, aoi_bounds[3])
+                bounds = [s_bound, w_bound, n_bound, e_bound]
 
                 return VIIRSObservationMetadata(
                     scene_id=h5_path.name,
@@ -234,7 +331,7 @@ class NightlightEngine:
                     julian_day=julian_str,
                     orbit_type="Nighttime VIIRS DNB (Suomi-NPP / NOAA-20)",
                     tile="h26v06",
-                    bounds=DEFAULT_BOUNDS,
+                    bounds=bounds,
                     total_pixels=total_pixels,
                     valid_pixels=valid_pixels,
                     cloud_pixels=cloud_pixels,
@@ -249,33 +346,81 @@ class NightlightEngine:
 
     def read_radiance_and_quality(
         self,
-        h5_path: Path
+        h5_path: Path,
+        use_gap_filled: bool = False,
+        aoi_crop: bool = False,
     ) -> Tuple[np.ndarray, np.ndarray, float]:
         """
         Extracts calibrated BRDF nighttime radiance array (nW/(cm^2 sr))
         and mandatory quality flag array from an HDF5 VNP46A2 product.
+        Optionally crops to active AOI if coordinate arrays exist.
         """
         with h5py.File(h5_path, "r") as f:
-            if HDF_RADIANCE_PATH in f:
-                ds_ntl = f[HDF_RADIANCE_PATH]
-                ds_qf = f[HDF_QUALITY_PATH]
-            else:
-                ds_ntl = f["DNB_BRDF-Corrected_NTL"]
-                ds_qf = f["Mandatory_Quality_Flag"]
+            rad_path = (
+                HDF_GAP_FILLED_PATH_V2
+                if (use_gap_filled and HDF_GAP_FILLED_PATH_V2 in f)
+                else HDF_RADIANCE_PATH_V2
+            )
+            ds_ntl = _get_ds(
+                f,
+                [
+                    rad_path,
+                    HDF_RADIANCE_PATH_V2,
+                    HDF_RADIANCE_PATH_V1,
+                    "DNB_BRDF-Corrected_NTL",
+                ],
+            )
+            ds_qf = _get_ds(
+                f,
+                [
+                    HDF_QUALITY_PATH_V2,
+                    HDF_QUALITY_PATH_V1,
+                    "Mandatory_Quality_Flag",
+                ],
+            )
 
-            dn = ds_ntl[:]
-            qf = ds_qf[:]
-            scale = float(ds_ntl.attrs.get("scale_factor", 0.1))
-            fill_val = int(ds_ntl.attrs.get("_FillValue", 65535))
+            if ds_ntl is None or ds_qf is None:
+                raise KeyError(f"Unable to find radiance or quality datasets in {h5_path}")
+
+            scale = _to_float(ds_ntl.attrs.get("scale_factor"), 1.0)
+
+            if aoi_crop and HDF_LAT_PATH_V2 in f and HDF_LON_PATH_V2 in f:
+                lat = f[HDF_LAT_PATH_V2][:]
+                lon = f[HDF_LON_PATH_V2][:]
+                active_aoi = aoi_engine.get_active_aoi()
+                n_limit = active_aoi.bbox.max_lat
+                s_limit = active_aoi.bbox.min_lat
+                w_limit = active_aoi.bbox.min_lon
+                e_limit = active_aoi.bbox.max_lon
+
+                # lat descends from North to South
+                r_matches = np.where((lat <= n_limit) & (lat >= s_limit))[0]
+                c_matches = np.where((lon >= w_limit) & (lon <= e_limit))[0]
+
+                if len(r_matches) > 0 and len(c_matches) > 0:
+                    r_min, r_max = int(r_matches[0]), int(r_matches[-1]) + 1
+                    c_min, c_max = int(c_matches[0]), int(c_matches[-1]) + 1
+                    dn = ds_ntl[r_min:r_max, c_min:c_max]
+                    qf = ds_qf[r_min:r_max, c_min:c_max]
+                else:
+                    dn = ds_ntl[:]
+                    qf = ds_qf[:]
+            else:
+                dn = ds_ntl[:]
+                qf = ds_qf[:]
 
             # Quality Masking
-            valid_mask = (qf == 0) | (qf == 1)
+            if use_gap_filled:
+                valid_mask = dn >= 0.0
+            else:
+                valid_mask = (qf == 0) & (dn >= 0.0)
+
             radiance = np.where(valid_mask, dn.astype(np.float32) * scale, np.nan)
             return radiance, qf, scale
 
     def run_nightlight_analysis(
         self,
-        params: Optional[NightlightAnalysisParams] = None
+        params: Optional[NightlightAnalysisParams] = None,
     ) -> NightlightAnalysisResult:
         """
         Core Night-Light Disruption and Anomaly Detection Pipeline:
@@ -292,12 +437,32 @@ class NightlightEngine:
 
         analysis_id = f"viirs_{int(datetime.now(timezone.utc).timestamp())}"
         available_obs = self.list_available_observations()
+        if not available_obs:
+            logger.info("No local VIIRS granules found for active AOI. Attempting live CMR download...")
+            self.download_latest_viirs_granules()
+            available_obs = self.list_available_observations()
+
+        if not available_obs:
+            token = os.getenv("EARTHDATA_TOKEN", "").strip()
+            if not token:
+                raise FileNotFoundError(
+                    "EARTHDATA_TOKEN_REQUIRED: NASA Earthdata Bearer token required in backend/.env "
+                    "to download authentic VNP46A2 HDF5 granules."
+                )
+            raise FileNotFoundError(
+                "DATA_UNAVAILABLE: No authentic NASA Black Marble VNP46A2 HDF5 granules found in data/viirs. "
+                "Download authentic granules with NASA Earthdata credentials to execute analysis."
+            )
 
         # 1. Resolve Pre-Event Baseline Dates
         pre_dates = params.pre_event_dates
         if not pre_dates:
             # Default to first 3 baseline observations
-            pre_dates = [obs.date for obs in available_obs if obs.date in ["2023-10-01", "2023-10-02", "2023-10-03"]]
+            pre_dates = [
+                obs.date
+                for obs in available_obs
+                if obs.date in ["2023-10-01", "2023-10-02", "2023-10-03"]
+            ]
             if not pre_dates:
                 pre_dates = [obs.date for obs in available_obs[:3]]
 
@@ -305,10 +470,13 @@ class NightlightEngine:
         post_date = params.post_event_date
         if not post_date:
             # Default to the most recent post-event observation not in pre_dates
-            post_candidates = sorted([obs.date for obs in available_obs if obs.date not in pre_dates], reverse=True)
+            post_candidates = sorted(
+                [obs.date for obs in available_obs if obs.date not in pre_dates],
+                reverse=True,
+            )
             post_date = post_candidates[0] if post_candidates else available_obs[-1].date
 
-        # Load Pre-Event HDF5 Observations
+        # Load Pre-Event HDF5 Observations (cropped to active AOI for performance)
         pre_files = [obs.hdf5_path for obs in available_obs if obs.date in pre_dates]
         if not pre_files:
             raise ValueError(f"No VIIRS HDF5 files found matching pre-event dates: {pre_dates}")
@@ -316,7 +484,7 @@ class NightlightEngine:
         # Compute Multi-Temporal Baseline Composite
         rad_stacks = []
         for p in pre_files:
-            rad, qf, _ = self.read_radiance_and_quality(Path(p))
+            rad, _, _ = self.read_radiance_and_quality(Path(p), use_gap_filled=False, aoi_crop=True)
             rad_stacks.append(rad)
 
         rad_stack = np.stack(rad_stacks, axis=0)  # shape (K, H, W)
@@ -329,19 +497,32 @@ class NightlightEngine:
         # Baseline radiance: Median of cloud-free observations
         with np.errstate(all="ignore"):
             baseline_radiance = np.nanmedian(rad_stack, axis=0)
-        baseline_radiance[insufficient_baseline_mask] = np.nan
+
+        # When monsoon clouds cover raw pre-event days, fill gaps from NASA's official Gap-Filled BRDF layer
+        if np.any(insufficient_baseline_mask):
+            gf_stacks = []
+            for p in pre_files:
+                gf_rad, _, _ = self.read_radiance_and_quality(Path(p), use_gap_filled=True, aoi_crop=True)
+                gf_stacks.append(gf_rad)
+            with np.errstate(all="ignore"):
+                gf_baseline = np.nanmedian(np.stack(gf_stacks, axis=0), axis=0)
+            baseline_radiance[insufficient_baseline_mask] = gf_baseline[insufficient_baseline_mask]
+            # Update mask: only cells where even gap-filled is NaN remain insufficient
+            insufficient_baseline_mask = np.isnan(baseline_radiance)
 
         # Load Post-Event Observation
         post_obs_meta = next((obs for obs in available_obs if obs.date == post_date), None)
         if not post_obs_meta:
             raise ValueError(f"No VIIRS HDF5 file found for post-event date: {post_date}")
 
-        post_radiance, post_qf, _ = self.read_radiance_and_quality(Path(post_obs_meta.hdf5_path))
+        post_radiance, post_qf, _ = self.read_radiance_and_quality(
+            Path(post_obs_meta.hdf5_path), use_gap_filled=False, aoi_crop=True
+        )
 
         # Quality & Cloud Masks on Post-Observation
         # Rule: Do not classify missing, cloudy or poor-quality pixels as blackouts!
-        post_cloud_mask = (post_qf == 255) | (np.isnan(post_radiance))
-        post_poor_quality = (post_qf == 2)
+        post_cloud_mask = (post_qf > 0) | (np.isnan(post_radiance)) | (post_radiance < 0.0)
+        post_poor_quality = (post_qf >= 2) & (~post_cloud_mask)
 
         # 3. Percentage Brightness Reduction Calculation
         # Distinguish:
@@ -349,14 +530,21 @@ class NightlightEngine:
         unlit_bg_mask = (~np.isnan(baseline_radiance)) & (baseline_radiance < 1.0)
 
         # B. Lit baseline pixels (> 1.0 nW)
-        lit_mask = (~np.isnan(baseline_radiance)) & (baseline_radiance >= 1.0) & (~post_cloud_mask) & (~post_poor_quality)
+        lit_mask = (
+            (~np.isnan(baseline_radiance))
+            & (baseline_radiance >= 1.0)
+            & (~post_cloud_mask)
+            & (~post_poor_quality)
+        )
 
         rad_diff = np.zeros((h, w), dtype=np.float32)
         pct_reduction = np.zeros((h, w), dtype=np.float32)
 
         with np.errstate(all="ignore"):
             rad_diff[lit_mask] = baseline_radiance[lit_mask] - post_radiance[lit_mask]
-            pct_reduction[lit_mask] = (rad_diff[lit_mask] / baseline_radiance[lit_mask]) * 100.0
+            pct_reduction[lit_mask] = (
+                rad_diff[lit_mask] / baseline_radiance[lit_mask]
+            ) * 100.0
 
         # Candidate Reduction Pixels
         # Meets percentage reduction threshold (>= 40%) AND absolute drop threshold (>= 2.5 nW)
@@ -369,25 +557,33 @@ class NightlightEngine:
         # 4. Spatial Clustering (scipy.ndimage.label)
         # Filter out isolated single 500m pixels: Disasters cause regional cluster drops
         struct_8 = np.ones((3, 3), dtype=np.int32)
-        labeled_clusters, num_features = scipy.ndimage.label(candidate_reduction, structure=struct_8)
+        labeled_clusters, num_features = scipy.ndimage.label(
+            candidate_reduction, structure=struct_8
+        )
 
         significant_cluster_mask = np.zeros((h, w), dtype=bool)
         isolated_pixel_mask = np.zeros((h, w), dtype=bool)
         clusters_list: List[SpatialCluster] = []
 
-        # Approximate 500m cell area at latitude 26.9°N
-        # 15 arc-sec = 0.00416667 deg
-        lat_mid = 26.9
+        # Coordinate calculation for active AOI
+        active_aoi = aoi_engine.get_active_aoi()
+        s_bound = active_aoi.bbox.min_lat
+        w_bound = active_aoi.bbox.min_lon
+        n_bound = active_aoi.bbox.max_lat
+        e_bound = active_aoi.bbox.max_lon
+        bounds = [s_bound, w_bound, n_bound, e_bound]
+
+        lat_mid = (s_bound + n_bound) / 2.0
         dx_m = PIXEL_SIZE_DEG * 111320.0 * math.cos(math.radians(lat_mid))
         dy_m = PIXEL_SIZE_DEG * 111320.0
         cell_area_sqkm = (dx_m * dy_m) / 1e6  # ~0.22 sq km per pixel
 
-        lats = np.linspace(DEFAULT_BOUNDS[2], DEFAULT_BOUNDS[0], h)
-        lons = np.linspace(DEFAULT_BOUNDS[1], DEFAULT_BOUNDS[3], w)
+        lats = np.linspace(n_bound, s_bound, h)
+        lons = np.linspace(w_bound, e_bound, w)
 
         cluster_id_counter = 1
         for cid in range(1, num_features + 1):
-            cluster_pix = (labeled_clusters == cid)
+            cluster_pix = labeled_clusters == cid
             pix_count = int(np.sum(cluster_pix))
 
             if pix_count >= params.min_cluster_pixels:
@@ -401,33 +597,41 @@ class NightlightEngine:
                 mean_drop_pct = float(np.mean(pct_reduction[cluster_pix]))
                 area_sqkm = round(pix_count * cell_area_sqkm, 2)
 
-                # Geographic region lookup based on coordinates
-                region_name = "Teesta Corridor Regional Sector"
-                if centroid_lat < 26.89 and centroid_lon < 88.52:
-                    region_name = "Sevoke Gorge / Siliguri North Corridor"
-                elif centroid_lat >= 26.89 and centroid_lon < 88.49:
-                    region_name = "Middle Teesta Gorge (Rambhi / Teesta Bazar)"
-                elif centroid_lon >= 88.54:
-                    region_name = "Bagrakote / Eastern Foothills Sector"
+                # Geographic naming along Teesta corridor
+                if centroid_lat > 27.2:
+                    sub_region = "Upper Teesta / North Sikkim Corridor"
+                elif centroid_lat > 26.95:
+                    sub_region = "Middle Teesta / Singtam-Melli Gorge"
+                else:
+                    sub_region = "Lower Teesta / Sevoke Foothills Corridor"
+
+                region_name = f"Cluster {cluster_id_counter} ({sub_region})"
 
                 min_clat = float(np.min(lats[c_rows]))
                 max_clat = float(np.max(lats[c_rows]))
                 min_clon = float(np.min(lons[c_cols]))
                 max_clon = float(np.max(lons[c_cols]))
 
-                clusters_list.append(SpatialCluster(
-                    cluster_id=cluster_id_counter,
-                    pixel_count=pix_count,
-                    area_sqkm=area_sqkm,
-                    centroid_lat=round(centroid_lat, 4),
-                    centroid_lon=round(centroid_lon, 4),
-                    mean_baseline_radiance=round(mean_base_rad, 2),
-                    mean_post_radiance=round(mean_post_rad, 2),
-                    mean_radiance_drop_pct=round(mean_drop_pct, 1),
-                    approximate_region=region_name,
-                    spatial_resolution_note="VIIRS 15 arc-sec (~500m) sensor resolution footprint",
-                    coordinates_bbox=[round(min_clat, 4), round(min_clon, 4), round(max_clat, 4), round(max_clon, 4)],
-                ))
+                clusters_list.append(
+                    SpatialCluster(
+                        cluster_id=cluster_id_counter,
+                        pixel_count=pix_count,
+                        area_sqkm=area_sqkm,
+                        centroid_lat=round(centroid_lat, 4),
+                        centroid_lon=round(centroid_lon, 4),
+                        mean_baseline_radiance=round(mean_base_rad, 2),
+                        mean_post_radiance=round(mean_post_rad, 2),
+                        mean_radiance_drop_pct=round(mean_drop_pct, 1),
+                        approximate_region=region_name,
+                        spatial_resolution_note="VIIRS 15 arc-sec (~500m) sensor resolution footprint",
+                        coordinates_bbox=[
+                            round(min_clat, 4),
+                            round(min_clon, 4),
+                            round(max_clat, 4),
+                            round(max_clon, 4),
+                        ],
+                    )
+                )
                 cluster_id_counter += 1
             else:
                 isolated_pixel_mask[cluster_pix] = True
@@ -452,9 +656,7 @@ class NightlightEngine:
 
         # 6. Write Classified GeoTIFF
         out_geotiff_path = GEOTIFF_DIR / f"{analysis_id}.tif"
-        transform = from_bounds(
-            DEFAULT_BOUNDS[1], DEFAULT_BOUNDS[0], DEFAULT_BOUNDS[3], DEFAULT_BOUNDS[2], w, h
-        )
+        transform = from_bounds(w_bound, s_bound, e_bound, n_bound, w, h)
 
         meta = {
             "driver": "GTiff",
@@ -506,7 +708,9 @@ class NightlightEngine:
         cluster_mask_u8 = significant_cluster_mask.astype(np.uint8)
         geojson_features = []
 
-        for geom_dict, val in shapes(cluster_mask_u8, mask=(cluster_mask_u8 == 1), transform=transform):
+        for geom_dict, val in shapes(
+            cluster_mask_u8, mask=(cluster_mask_u8 == 1), transform=transform
+        ):
             poly = shape(geom_dict)
             if poly.is_valid and poly.area > 0.000001:
                 geojson_features.append({
@@ -518,9 +722,14 @@ class NightlightEngine:
                         "spatial_resolution": "15 arc-sec (~500m)",
                         "pre_event_dates": pre_dates,
                         "post_event_date": post_date,
-                        "area_sqkm": round(poly.area * (111320.0 * 111320.0 * math.cos(math.radians(lat_mid))) / 1e6, 2),
+                        "area_sqkm": round(
+                            poly.area
+                            * (111320.0 * 111320.0 * math.cos(math.radians(lat_mid)))
+                            / 1e6,
+                            2,
+                        ),
                         "scientific_attribution": "Observed surface luminance drop. Multiple causes include power grid disruption, commercial shutdown, evacuation curfew, and water surface reflectance change.",
-                    }
+                    },
                 })
 
         with open(out_geojson_path, "w", encoding="utf-8") as f:
@@ -529,7 +738,7 @@ class NightlightEngine:
         # 9. Pixel Statistics
         total_px = h * w
         valid_base_px = int(np.sum(~insufficient_baseline_mask))
-        valid_post_px = int(np.sum((post_qf == 0) | (post_qf == 1)))
+        valid_post_px = int(np.sum((post_qf == 0) & (post_radiance >= 0.0)))
         cloud_px = int(np.sum(post_cloud_mask))
         poor_px = int(np.sum(post_poor_quality))
         unlit_px = int(np.sum(unlit_bg_mask))
@@ -543,15 +752,15 @@ class NightlightEngine:
             "2. Radiance reduction reflects observed surface luminance drop. Do not automatically claim an electrical "
             "power outage from night-light reduction alone: evacuation curfews, commercial closures, atmospheric aerosol "
             "scattering, and floodwater surface quenching also cause significant luminance reduction. "
-            "3. Cloudy, missing, and poor-quality observations (Mandatory_Quality_Flag >= 2) are strictly screened out "
+            "3. Cloudy, missing, and poor-quality observations (Mandatory_Quality_Flag >= 1) are strictly screened out "
             "and are NEVER classified as blackouts."
         )
 
         result = NightlightAnalysisResult(
             id=analysis_id,
             timestamp=datetime.now(timezone.utc).isoformat(),
-            aoi_id="teesta_middle",
-            bounds=DEFAULT_BOUNDS,
+            aoi_id=active_aoi.id,
+            bounds=bounds,
             spatial_resolution_m=500.0,
             pre_event_dates=pre_dates,
             post_event_date=post_date,
@@ -575,6 +784,7 @@ class NightlightEngine:
 
         self._last_result = result
         return result
+
 
 # Singleton instance
 nightlight_engine = NightlightEngine()

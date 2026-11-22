@@ -45,6 +45,7 @@ interface LiveMapPageProps {
     osm_settlements?: any;
     osm_waterways?: any;
     aoi_corridor?: any;
+    hlz_landing_zones?: any;
   };
   onDownloadLayer: (layerKey: string) => void;
   onOpenAOIModal: () => void;
@@ -69,6 +70,7 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
     relief_centers: true,
     priority_markers: true,
     emergency_routes: true,
+    hlz_landing_zones: true,
   });
 
   // Satellite raster overlay states
@@ -248,58 +250,58 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
   }, [priorityVillages, searchTerm]);
 
   return (
-    <div className="relative w-full h-[calc(100vh-4rem)] bg-slate-950 flex flex-col overflow-hidden">
+    <div className="relative w-full h-[calc(100vh-4rem)] bg-[#050505] flex flex-col overflow-hidden">
       {/* Top Floating Telemetry & Scene Bar */}
-      <div className="absolute top-4 left-4 z-[1000] flex flex-wrap items-center gap-2">
+      <div className="absolute top-4 left-5 z-[1000] flex flex-wrap items-center gap-2">
         <button
           onClick={onOpenAOIModal}
-          className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-950/90 backdrop-blur-md border border-slate-800 text-xs text-slate-200 hover:border-cyan-600 transition shadow-lg cursor-pointer"
+          className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-[#111113]/90 backdrop-blur-md border border-zinc-800 text-xs text-white hover:border-white transition shadow-lg cursor-pointer"
         >
-          <Compass className="w-3.5 h-3.5 text-cyan-400" />
+          <Compass className="w-3.5 h-3.5 text-white" />
           <span className="font-semibold">{activeAOI?.name || 'Teesta Corridor'}</span>
         </button>
 
         {/* Real counts badge */}
-        <div className="flex items-center space-x-3 px-3 py-1.5 rounded-lg bg-slate-950/90 backdrop-blur-md border border-slate-800 text-xs text-slate-300 shadow-lg">
+        <div className="flex items-center space-x-3 px-3 py-1.5 rounded-lg bg-[#111113]/90 backdrop-blur-md border border-zinc-800 text-xs text-zinc-300 shadow-lg">
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span className="font-mono font-bold text-slate-100">{settlementsCount}</span>
-            <span className="text-[11px] text-slate-400">Settlements</span>
+            <span className="font-mono font-bold text-white">{settlementsCount}</span>
+            <span className="text-[11px] text-zinc-400">Settlements</span>
           </div>
-          <span className="text-slate-600">•</span>
+          <span className="text-zinc-600">•</span>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-amber-400" />
-            <span className="font-mono font-bold text-slate-100">{roadsCount}</span>
-            <span className="text-[11px] text-slate-400">Road Ways</span>
+            <span className="font-mono font-bold text-white">{roadsCount}</span>
+            <span className="text-[11px] text-zinc-400">Road Ways</span>
           </div>
-          <span className="text-slate-600">•</span>
+          <span className="text-zinc-600">•</span>
           <div className="flex items-center space-x-1.5">
-            <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span className="font-mono font-bold text-slate-100">{waterwaysCount}</span>
-            <span className="text-[11px] text-slate-400">River Channels</span>
+            <span className="w-2 h-2 rounded-full bg-zinc-300" />
+            <span className="font-mono font-bold text-white">{waterwaysCount}</span>
+            <span className="text-[11px] text-zinc-400">River Channels</span>
           </div>
-          <span className="text-slate-600">•</span>
+          <span className="text-zinc-600">•</span>
           <div className="flex items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span className="font-mono font-bold text-emerald-300">{reliefFacilities.length}</span>
-            <span className="text-[11px] text-slate-400">Relief Hubs</span>
+            <span className="font-mono font-bold text-emerald-400">{reliefFacilities.length}</span>
+            <span className="text-[11px] text-zinc-400">Relief Hubs</span>
           </div>
         </div>
 
         {/* Quick Search */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search settlement..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-950/90 backdrop-blur-md border border-slate-800 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500 shadow-lg w-44"
+            className="pl-8 pr-3 py-1.5 rounded-lg bg-black border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-white shadow-lg w-44"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
             >
               <X className="w-3 h-3" />
             </button>
@@ -307,7 +309,7 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
 
           {/* Search Dropdown Results */}
           {filteredVillages.length > 0 && (
-            <div className="absolute top-full left-0 mt-1 w-60 bg-slate-900 border border-slate-800 rounded-lg shadow-2xl overflow-hidden z-[1100] max-h-48 overflow-y-auto">
+            <div className="absolute top-full left-0 mt-1 w-60 bg-[#111113] border border-zinc-800 rounded-lg shadow-2xl overflow-hidden z-[1100] max-h-48 overflow-y-auto">
               {filteredVillages.map((v) => (
                 <div
                   key={v.name}
@@ -315,11 +317,11 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
                     setSelectedVillage(v);
                     setSearchTerm('');
                   }}
-                  className="px-3 py-2 hover:bg-slate-800 cursor-pointer border-b border-slate-800/60 last:border-0 flex items-center justify-between text-xs"
+                  className="px-3 py-2 hover:bg-zinc-800 cursor-pointer border-b border-zinc-800/60 last:border-0 flex items-center justify-between text-xs"
                 >
                   <div>
-                    <div className="font-bold text-slate-100">#{v.rank} {v.name}</div>
-                    <div className="text-[10px] text-slate-400 capitalize">{v.place_type} • {v.population.toLocaleString()} pop</div>
+                    <div className="font-bold text-white">#{v.rank} {v.name}</div>
+                    <div className="text-[10px] text-zinc-400 capitalize">{v.place_type} • {v.population ? `${v.population.toLocaleString()} pop` : 'Unrecorded pop'}</div>
                   </div>
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
                     v.priority_tier === 'P1_CRITICAL'
@@ -336,21 +338,21 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
       </div>
 
       {/* Floating Satellite & Flood Controls Card */}
-      <div className="absolute top-16 left-4 z-[1000] w-80 bg-slate-950/90 backdrop-blur-md border border-slate-800 rounded-xl p-3.5 shadow-2xl space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+      <div className="absolute top-16 left-5 z-[1000] w-80 bg-[#111113]/95 backdrop-blur-md border border-zinc-800 rounded-xl p-3.5 shadow-2xl space-y-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
           <div className="flex items-center space-x-2">
-            <Satellite className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            <Satellite className="w-4 h-4 text-white" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">
               Satellite & Flood Controls
             </span>
           </div>
           <div className="flex items-center space-x-2">
-            <label className="text-[11px] text-slate-400 flex items-center space-x-1 cursor-pointer">
+            <label className="text-[11px] text-zinc-400 flex items-center space-x-1 cursor-pointer">
               <input
                 type="checkbox"
                 checked={isOverlayVisible}
                 onChange={(e) => setIsOverlayVisible(e.target.checked)}
-                className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0 w-3 h-3 cursor-pointer"
+                className="rounded bg-zinc-800 border-zinc-700 text-white focus:ring-0 w-3 h-3 cursor-pointer"
               />
               <span>Imagery</span>
             </label>
@@ -359,7 +361,7 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
 
         {/* Scene Selector */}
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wider">
             Active Satellite Scene
           </label>
           <select
@@ -374,7 +376,7 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
                 setRenderMode('true_color');
               }
             }}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-black border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:border-white focus:outline-none"
           >
             {availableScenes.map((s) => (
               <option key={s.id} value={s.id}>
@@ -386,13 +388,13 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
 
         {/* Layer Mode Selector */}
         <div className="space-y-1">
-          <label className="text-[10px] text-slate-400 uppercase tracking-wider">
+          <label className="text-[10px] text-zinc-400 uppercase tracking-wider">
             Raster Processing Mode
           </label>
           <select
             value={renderMode}
             onChange={(e) => setRenderMode(e.target.value as RasterRenderMode)}
-            className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:border-cyan-500 focus:outline-none"
+            className="w-full bg-black border border-zinc-700 rounded-lg px-2.5 py-1.5 text-xs text-zinc-200 focus:border-white focus:outline-none"
           >
             {isS1 ? (
               <>
@@ -411,9 +413,9 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
 
         {/* Satellite Opacity Slider */}
         <div className="space-y-1">
-          <div className="flex justify-between text-[10px] text-slate-400">
+          <div className="flex justify-between text-[10px] text-zinc-400">
             <span>Satellite Opacity</span>
-            <span className="font-mono text-cyan-400">{Math.round(opacity * 100)}%</span>
+            <span className="font-mono text-white">{Math.round(opacity * 100)}%</span>
           </div>
           <input
             type="range"
@@ -422,18 +424,18 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
             step="0.05"
             value={opacity}
             onChange={(e) => setOpacity(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+            className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
           />
         </div>
 
         {/* Flood Extent Opacity Slider */}
-        <div className="space-y-1 pt-1 border-t border-slate-800">
-          <div className="flex justify-between text-[10px] text-slate-400">
-            <span className="flex items-center space-x-1 text-cyan-300">
-              <Waves className="w-3 h-3 text-cyan-400" />
+        <div className="space-y-1 pt-1 border-t border-zinc-800">
+          <div className="flex justify-between text-[10px] text-zinc-400">
+            <span className="flex items-center space-x-1 text-zinc-200">
+              <Waves className="w-3 h-3 text-white" />
               <span>Flood Inundation Opacity</span>
             </span>
-            <span className="font-mono text-cyan-400">{Math.round(floodOpacity * 100)}%</span>
+            <span className="font-mono text-white">{Math.round(floodOpacity * 100)}%</span>
           </div>
           <input
             type="range"
@@ -442,15 +444,15 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
             step="0.05"
             value={floodOpacity}
             onChange={(e) => setFloodOpacity(parseFloat(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+            className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
           />
         </div>
 
         {/* Before / After Toggle Section */}
-        <div className="pt-2 border-t border-slate-800 space-y-2">
+        <div className="pt-2 border-t border-zinc-800 space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-slate-300 flex items-center space-x-1.5">
-              <ArrowRightLeft className="w-3 h-3 text-cyan-400" />
+            <span className="text-[11px] font-semibold text-zinc-300 flex items-center space-x-1.5">
+              <ArrowRightLeft className="w-3 h-3 text-white" />
               <span>Event Comparison</span>
             </span>
             <button
@@ -463,8 +465,8 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
               }}
               className={`text-[10px] px-2 py-0.5 rounded font-semibold transition cursor-pointer ${
                 isCompareMode
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
-                  : 'bg-slate-800 text-slate-400 hover:text-slate-200'
+                  ? 'bg-white text-black font-bold'
+                  : 'bg-zinc-800 text-zinc-300 hover:text-white'
               }`}
             >
               {isCompareMode ? 'Disable Comparison' : 'Enable Split'}
@@ -474,11 +476,11 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
           {isCompareMode && (
             <div className="space-y-2 pt-1 text-[11px]">
               <div>
-                <label className="text-[10px] text-slate-400">Before-Event Scene:</label>
+                <label className="text-[10px] text-zinc-400">Before-Event Scene:</label>
                 <select
                   value={beforeSceneId}
                   onChange={(e) => setBeforeSceneId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                  className="w-full bg-black border border-zinc-700 rounded px-2 py-1 text-zinc-200"
                 >
                   {availableScenes.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -489,11 +491,11 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-400">After-Event Scene:</label>
+                <label className="text-[10px] text-zinc-400">After-Event Scene:</label>
                 <select
                   value={afterSceneId}
                   onChange={(e) => setAfterSceneId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-slate-200"
+                  className="w-full bg-black border border-zinc-700 rounded px-2 py-1 text-zinc-200"
                 >
                   {availableScenes.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -504,9 +506,9 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
               </div>
 
               <div className="space-y-1">
-                <div className="flex justify-between text-[10px] text-slate-400">
+                <div className="flex justify-between text-[10px] text-zinc-400">
                   <span>Split Divider</span>
-                  <span className="font-mono text-cyan-400">{compareSplit}%</span>
+                  <span className="font-mono text-white">{compareSplit}%</span>
                 </div>
                 <input
                   type="range"
@@ -514,7 +516,7 @@ export const LiveMapPage: React.FC<LiveMapPageProps> = ({
                   max="100"
                   value={compareSplit}
                   onChange={(e) => setCompareSplit(parseInt(e.target.value))}
-                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                  className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-white"
                 />
               </div>
             </div>

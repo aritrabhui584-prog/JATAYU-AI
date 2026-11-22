@@ -35,6 +35,8 @@ def analyze_nightlight(params: Optional[NightlightAnalysisParams] = None):
         if params is None:
             params = NightlightAnalysisParams()
         return nightlight_engine.run_nightlight_analysis(params)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Night-light analysis failed: {str(e)}")
 
@@ -46,6 +48,8 @@ def get_latest_nightlight_analysis():
         return latest
     try:
         return nightlight_engine.run_nightlight_analysis()
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed generating baseline nightlight analysis: {str(e)}")
 

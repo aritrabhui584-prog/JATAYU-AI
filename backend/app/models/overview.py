@@ -22,14 +22,14 @@ class ExecutiveDisasterMetrics(BaseModel):
 
 
 class InfrastructureSummary(BaseModel):
-    total_road_network_km: float
-    closed_road_km: float
-    severed_arteries_count: int
-    operational_facilities_count: int
-    trauma_centres_count: int
+    total_road_network_km: Optional[float] = None
+    closed_road_km: float = 0.0
+    severed_arteries_count: int = 0
+    operational_facilities_count: int = 0
+    trauma_centres_count: int = 0
     teesta_discharge_m3s: Optional[float] = None
-    min_elevation_m: float
-    max_elevation_m: float
+    min_elevation_m: Optional[float] = None
+    max_elevation_m: Optional[float] = None
 
 
 class UnifiedSystemOverview(BaseModel):

@@ -57,7 +57,6 @@ interface NightLightPageProps {
   activeAOI?: AOIConfig | null;
 }
 
-// Controller to smoothly center or focus on a selected cluster
 const MapClusterController: React.FC<{
   selectedCluster: SpatialCluster | null;
 }> = ({ selectedCluster }) => {
@@ -70,22 +69,47 @@ const MapClusterController: React.FC<{
   return null;
 };
 
+const BASEMAP_TILES = {
+  dark: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+    maxNativeZoom: 15,
+    labelsMaxNativeZoom: 15,
+    maxZoom: 18,
+    name: 'Tactical Dark',
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl: 'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+    maxNativeZoom: 15,
+    labelsMaxNativeZoom: 16,
+    maxZoom: 18,
+    name: 'Satellite Rescue View',
+  },
+  osm: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    labelsUrl: null,
+    attribution: '&copy; OpenStreetMap contributors',
+    maxNativeZoom: 18,
+    maxZoom: 18,
+    name: 'OpenStreetMap Street',
+  },
+};
+
 export const NightLightPage: React.FC<NightLightPageProps> = () => {
-  // Phase 5 Analysis State
   const [analysisResult, setAnalysisResult] = useState<NightlightAnalysisResult | null>(null);
   const [observations, setObservations] = useState<VIIRSObservationMetadata[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Active UI tab
   const [activeTab, setActiveTab] = useState<'console' | 'clusters' | 'telemetry'>('console');
-
-  // Interactive Map Controls
   const [rasterOpacity, setRasterOpacity] = useState<number>(0.85);
   const [selectedCluster, setSelectedCluster] = useState<SpatialCluster | null>(null);
   const [showDisclaimerDetails, setShowDisclaimerDetails] = useState<boolean>(false);
+  const [activeBasemap, setActiveBasemap] = useState<'dark' | 'satellite' | 'osm'>('dark');
 
-  // Analysis Parameters
   const [params, setParams] = useState<NightlightAnalysisParams>({
     pre_event_dates: ['2023-10-01', '2023-10-02', '2023-10-03'],
     post_event_date: '2023-10-05',
@@ -96,7 +120,6 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
     exclude_cloud_pixels: true,
   });
 
-  // Initial Data Fetch
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -140,13 +163,11 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
     }
   };
 
-  // Bounds for Map Overlay: [south, west, north, east] -> Leaflet [[south, west], [north, east]]
   const overlayBounds: L.LatLngBoundsExpression = [
     [analysisResult?.bounds[0] ?? 26.75, analysisResult?.bounds[1] ?? 88.35],
     [analysisResult?.bounds[2] ?? 27.05, analysisResult?.bounds[3] ?? 88.65],
   ];
 
-  // Chart data for clusters
   const clusterChartData = analysisResult?.clusters.map((c) => ({
     name: `C${c.cluster_id}: ${c.approximate_region.split('/')[0]}`,
     dropPct: c.mean_radiance_drop_pct,
@@ -157,20 +178,20 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-purple-950/60 border border-purple-800/60 text-purple-400">
+            <div className="p-2 rounded-xl bg-black border border-zinc-800 text-white">
               <Moon className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
+              <h1 className="text-xl font-bold text-white flex items-center space-x-2">
                 <span>NASA VIIRS Black Marble VNP46A2 Night-Light Intelligence</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-purple-950 border border-purple-800 text-purple-300">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-300">
                   Phase 5 Engine
                 </span>
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 BRDF-corrected nighttime radiance, Mandatory_Quality_Flag cloud screening, multi-temporal baseline comparison, and 500m resolution spatial clustering.
               </p>
             </div>
@@ -182,25 +203,25 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           <a
             href={api.getNightlightExportGeoTIFFUrl(analysisResult?.id)}
             download
-            className="px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+            className="px-3.5 py-2 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-white text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-slate-300" />
+            <Download className="w-3.5 h-3.5 text-zinc-300" />
             <span>Export GeoTIFF</span>
           </a>
 
           <a
             href={api.getNightlightExportGeoJSONUrl(analysisResult?.id)}
             download
-            className="px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+            className="px-3.5 py-2 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-white text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-slate-300" />
+            <Download className="w-3.5 h-3.5 text-zinc-300" />
             <span>Export GeoJSON</span>
           </a>
 
           <button
             onClick={handleRunAnalysis}
             disabled={isAnalyzing}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center space-x-2 shadow-lg shadow-purple-950/50 disabled:opacity-50 cursor-pointer transition-all"
+            className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center space-x-2 shadow-sm disabled:opacity-50 cursor-pointer transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
             <span>{isAnalyzing ? 'Processing HDF5...' : 'Run Night-Light Engine'}</span>
@@ -209,32 +230,32 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
       </div>
 
       {/* Mandatory Scientific Attribution & 500m Resolution Banner */}
-      <div className="p-4 rounded-xl bg-purple-950/40 border border-purple-800/70 text-purple-200 text-xs space-y-2">
+      <div className="p-4 rounded-xl bg-[#111113] border border-zinc-800 text-zinc-200 text-xs space-y-2">
         <div className="flex items-start justify-between">
           <div className="flex items-start space-x-2.5">
-            <ShieldAlert className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+            <ShieldAlert className="w-5 h-5 text-zinc-300 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <span className="font-bold text-slate-100 flex items-center space-x-2">
+              <span className="font-bold text-white flex items-center space-x-2">
                 <span>SCIENTIFIC CAUSAL ATTRIBUTION & SENSOR RESOLUTION NOTICE</span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.2 rounded bg-purple-900 border border-purple-700 text-purple-200">
+                <span className="text-[10px] uppercase font-mono px-2 py-0.2 rounded bg-zinc-800 border border-zinc-700 text-zinc-200">
                   15 Arc-Sec (~500m) Resolution
                 </span>
               </span>
-              <p className="text-slate-300 text-[11px] leading-relaxed">
+              <p className="text-zinc-300 text-[11px] leading-relaxed">
                 NASA VIIRS Day/Night Band operates at <strong>~500m pixel resolution</strong> (15 arc-seconds equal-angle grid). It cannot resolve individual village houses or pinpoint single streetlights. Night-light radiance reduction indicates <strong>surface luminance drop</strong>, which may stem from power grid severance, but also emergency evacuation curfews, commercial shutdowns, water surface reflectance changes, or aerosol scattering. Cloudy, missing, and poor-quality pixels (<code>Mandatory_Quality_Flag ≥ 2</code>) are strictly masked and <strong>never classified as blackouts</strong>.
               </p>
             </div>
           </div>
           <button
             onClick={() => setShowDisclaimerDetails(!showDisclaimerDetails)}
-            className="text-purple-300 hover:text-white text-xs underline cursor-pointer shrink-0 ml-3"
+            className="text-white hover:underline text-xs cursor-pointer shrink-0 ml-3"
           >
             {showDisclaimerDetails ? 'Hide Details' : 'Read Methodology'}
           </button>
         </div>
 
         {showDisclaimerDetails && (
-          <div className="pt-2 border-t border-purple-800/60 text-[11px] text-slate-300 space-y-1 font-mono">
+          <div className="pt-2 border-t border-zinc-800 text-[11px] text-zinc-400 space-y-1 font-mono">
             <div>• Sensor: VIIRS Day/Night Band on Suomi-NPP / NOAA-20</div>
             <div>• Product: NASA Black Marble Daily Moonlight-adjusted BRDF-Corrected NTL (VNP46A2)</div>
             <div>• Quality Control: Mandatory_Quality_Flag (0: High Quality, 1: Good, 2: Poor, 255: Cloud/Fill)</div>
@@ -252,7 +273,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           </div>
           <button
             onClick={() => setErrorMsg(null)}
-            className="text-slate-400 hover:text-rose-300 text-xs underline cursor-pointer"
+            className="text-zinc-400 hover:text-rose-300 text-xs underline cursor-pointer"
           >
             Dismiss
           </button>
@@ -261,55 +282,55 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
 
       {/* Telemetry KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-semibold">
             Spatial Resolution
           </span>
-          <div className="text-xl font-bold text-slate-100 font-mono">
-            ~500 <span className="text-xs text-slate-400 font-normal">m</span>
+          <div className="text-xl font-bold text-white font-mono">
+            ~500 <span className="text-xs text-zinc-400 font-normal">m</span>
           </div>
-          <span className="text-[10px] text-slate-400 block font-mono">
+          <span className="text-[10px] text-zinc-400 block font-mono">
             15 arc-sec / 0.22 km² px
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider text-purple-400 block font-semibold">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-semibold">
             Baseline Window
           </span>
-          <div className="text-xl font-bold text-purple-400 font-mono">
-            {analysisResult?.pre_event_dates.length ?? '--'} <span className="text-xs text-purple-300 font-normal">Days</span>
+          <div className="text-xl font-bold text-white font-mono">
+            {analysisResult?.pre_event_dates.length ?? '--'} <span className="text-xs text-zinc-400 font-normal">Days</span>
           </div>
-          <span className="text-[10px] text-purple-400/80 block">
+          <span className="text-[10px] text-zinc-400 block">
             Multi-temporal median
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider text-cyan-400 block font-semibold">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-semibold">
             Valid Post Pixels
           </span>
-          <div className="text-xl font-bold text-cyan-400 font-mono">
+          <div className="text-xl font-bold text-white font-mono">
             {analysisResult?.valid_post_pixels ? analysisResult.valid_post_pixels.toLocaleString() : '--'}
           </div>
-          <span className="text-[10px] text-cyan-500/80 block">
+          <span className="text-[10px] text-zinc-400 block">
             Cloud-free observations
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider text-indigo-400 block font-semibold">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-semibold">
             Cloud Filtered
           </span>
-          <div className="text-xl font-bold text-indigo-400 font-mono">
+          <div className="text-xl font-bold text-zinc-300 font-mono">
             {analysisResult?.cloud_obscured_pixels ? analysisResult.cloud_obscured_pixels.toLocaleString() : '0'}
           </div>
-          <span className="text-[10px] text-indigo-400/80 block">
+          <span className="text-[10px] text-zinc-400 block">
             Excluded from blackouts
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold">
             Significant Reduction
           </span>
@@ -322,7 +343,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-amber-400 block font-semibold">
             Spatial Clusters
           </span>
@@ -336,13 +357,13 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center space-x-2 border-b border-slate-800">
+      <div className="flex items-center space-x-2 border-b border-zinc-800">
         <button
           onClick={() => setActiveTab('console')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'console'
-              ? 'border-purple-400 text-purple-300 bg-purple-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -353,8 +374,8 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           onClick={() => setActiveTab('clusters')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'clusters'
-              ? 'border-purple-400 text-purple-300 bg-purple-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Zap className="w-3.5 h-3.5" />
@@ -365,8 +386,8 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           onClick={() => setActiveTab('telemetry')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'telemetry'
-              ? 'border-purple-400 text-purple-300 bg-purple-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Calendar className="w-3.5 h-3.5" />
@@ -380,34 +401,76 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Map Column (2/3 width) */}
             <div className="lg:col-span-2 space-y-3">
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl relative">
+              <div className="rounded-2xl bg-[#111113] border border-zinc-800 overflow-hidden shadow-2xl relative">
                 {/* Map Control Bar */}
-                <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-xs">
+                <div className="p-3 bg-black border-b border-zinc-800 flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-3">
-                    <span className="font-bold text-slate-200 flex items-center space-x-1.5">
-                      <Moon className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="font-bold text-white flex items-center space-x-1.5">
+                      <Moon className="w-3.5 h-3.5 text-zinc-300" />
                       <span>VIIRS VNP46A2 500m Raster Overlay</span>
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-zinc-400">
                       Post-Event Date: {analysisResult?.post_event_date}
                     </span>
                   </div>
 
-                  {/* Opacity Slider */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-[11px] text-slate-400">Opacity:</span>
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="1.0"
-                      step="0.05"
-                      value={rasterOpacity}
-                      onChange={(e) => setRasterOpacity(parseFloat(e.target.value))}
-                      className="w-20 accent-purple-500 cursor-pointer"
-                    />
-                    <span className="font-mono text-[10px] text-purple-300 font-bold">
-                      {Math.round(rasterOpacity * 100)}%
-                    </span>
+                  <div className="flex items-center space-x-3">
+                    {/* Opacity Slider */}
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] text-zinc-400">Opacity:</span>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="1.0"
+                        step="0.05"
+                        value={rasterOpacity}
+                        onChange={(e) => setRasterOpacity(parseFloat(e.target.value))}
+                        className="w-20 accent-white cursor-pointer"
+                      />
+                      <span className="font-mono text-[10px] text-white font-bold">
+                        {Math.round(rasterOpacity * 100)}%
+                      </span>
+                    </div>
+
+                    {/* Quick Basemap Switcher */}
+                    <div className="flex items-center space-x-1 bg-black border border-zinc-800 rounded-lg p-0.5 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('dark')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'dark'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="Tactical Dark Gray Basemap (smoothly scaled above zoom 13)"
+                      >
+                        🌑 Dark
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('satellite')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'satellite'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="High-Resolution Esri Satellite Imagery with Reference Labels"
+                      >
+                        🛰️ Satellite
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('osm')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'osm'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="Keyless OpenStreetMap Street Map"
+                      >
+                        🗺️ OSM
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -416,13 +479,34 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                   <MapContainer
                     center={[26.90, 88.50]}
                     zoom={11}
+                    zoomSnap={1}
+                    zoomDelta={1}
+                    wheelPxPerZoomLevel={120}
+                    maxZoom={18}
                     scrollWheelZoom={true}
-                    className="h-full w-full bg-slate-950"
+                    className="h-full w-full bg-[#050505]"
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/">CartoDB</a> Dark Matter'
-                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      key={`nl-base-${activeBasemap}`}
+                      attribution={BASEMAP_TILES[activeBasemap].attribution}
+                      url={BASEMAP_TILES[activeBasemap].url}
+                      maxNativeZoom={BASEMAP_TILES[activeBasemap].maxNativeZoom}
+                      maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+                      detectRetina={false}
+                      errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                     />
+                    {BASEMAP_TILES[activeBasemap].labelsUrl && (
+                      <TileLayer
+                        key={`nl-labels-${activeBasemap}`}
+                        attribution=""
+                        url={BASEMAP_TILES[activeBasemap].labelsUrl!}
+                        maxNativeZoom={BASEMAP_TILES[activeBasemap].labelsMaxNativeZoom}
+                        maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+                        detectRetina={false}
+                        zIndex={650}
+                        errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+                      />
+                    )}
 
                     <ScaleControl position="bottomleft" />
                     <MapClusterController selectedCluster={selectedCluster} />
@@ -472,22 +556,22 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                 </div>
 
                 {/* Map Legend Bar */}
-                <div className="p-2.5 bg-slate-950 border-t border-slate-800 flex flex-wrap items-center justify-between text-[10px] text-slate-300 gap-2">
+                <div className="p-2.5 bg-black border-t border-zinc-800 flex flex-wrap items-center justify-between text-[10px] text-zinc-300 gap-2">
                   <div className="flex items-center space-x-4">
                     <span className="flex items-center space-x-1.5">
                       <span className="w-3 h-3 rounded-sm bg-rose-500 inline-block" />
                       <span>Significant Light Reduction Cluster (&gt;40% drop, ≥3 px)</span>
                     </span>
                     <span className="flex items-center space-x-1.5">
-                      <span className="w-3 h-3 rounded-sm bg-purple-600 inline-block" />
+                      <span className="w-3 h-3 rounded-sm bg-zinc-600 inline-block" />
                       <span>Cloud Obscured / Poor Quality (Class 254 - NOT a blackout)</span>
                     </span>
                     <span className="flex items-center space-x-1.5">
-                      <span className="w-3 h-3 rounded-sm bg-cyan-400 inline-block" />
+                      <span className="w-3 h-3 rounded-sm bg-white inline-block" />
                       <span>Normal Nocturnal Lighting</span>
                     </span>
                   </div>
-                  <span className="font-mono text-slate-400">
+                  <span className="font-mono text-zinc-400">
                     Grid: 15" Equal-Angle
                   </span>
                 </div>
@@ -495,29 +579,29 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
 
               {/* Selected Cluster Detail Banner */}
               {selectedCluster && (
-                <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+                <div className="p-4 rounded-xl bg-[#111113] border border-zinc-800 space-y-2">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div>
-                      <div className="text-sm font-bold text-slate-100 flex items-center space-x-2">
+                      <div className="text-sm font-bold text-white flex items-center space-x-2">
                         <Zap className="w-4 h-4 text-rose-400" />
                         <span>Spatial Cluster {selectedCluster.cluster_id}: {selectedCluster.approximate_region}</span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="text-xs text-zinc-400 mt-0.5">
                         Centroid: [{selectedCluster.centroid_lat}, {selectedCluster.centroid_lon}] | Bounding Area: {selectedCluster.area_sqkm} km²
                       </p>
                     </div>
 
                     <div className="flex items-center space-x-4 text-xs font-mono">
                       <div>
-                        <span className="text-[10px] uppercase text-slate-400 block">Baseline</span>
-                        <span>{selectedCluster.mean_baseline_radiance} nW</span>
+                        <span className="text-[10px] uppercase text-zinc-400 block">Baseline</span>
+                        <span className="text-white">{selectedCluster.mean_baseline_radiance} nW</span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase text-slate-400 block">Post-Disaster</span>
-                        <span className="font-bold">{selectedCluster.mean_post_radiance} nW</span>
+                        <span className="text-[10px] uppercase text-zinc-400 block">Post-Disaster</span>
+                        <span className="font-bold text-white">{selectedCluster.mean_post_radiance} nW</span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase text-slate-400 block">Radiance Loss</span>
+                        <span className="text-[10px] uppercase text-zinc-400 block">Radiance Loss</span>
                         <span className="text-rose-400 font-bold">-{selectedCluster.mean_radiance_drop_pct}%</span>
                       </div>
                     </div>
@@ -529,21 +613,21 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
             {/* Right Side: Parameters & Cluster Bar Chart */}
             <div className="space-y-4">
               {/* Detection Parameter Sliders */}
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-                <span className="text-xs font-bold text-slate-200 block uppercase tracking-wider flex items-center space-x-1.5">
-                  <Sliders className="w-4 h-4 text-purple-400" />
+              <div className="p-4 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
+                <span className="text-xs font-bold text-white block uppercase tracking-wider flex items-center space-x-1.5">
+                  <Sliders className="w-4 h-4 text-zinc-300" />
                   <span>Detection Parameters</span>
                 </span>
 
                 {/* Post Event Date Selector */}
                 <div className="space-y-1">
-                  <label className="text-[11px] font-semibold text-slate-300 block">
+                  <label className="text-[11px] font-semibold text-zinc-300 block">
                     Post-Event Observation Date
                   </label>
                   <select
                     value={params.post_event_date}
                     onChange={(e) => setParams({ ...params, post_event_date: e.target.value })}
-                    className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-purple-500 font-mono"
+                    className="w-full px-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-zinc-200 text-xs focus:outline-none focus:border-white font-mono"
                   >
                     <option value="2023-10-05">2023-10-05 (Cloud-Free Post-Flood Observation)</option>
                     <option value="2023-10-04">2023-10-04 (Cloudy Peak Storm — Cloud Screening Test)</option>
@@ -553,8 +637,8 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                 {/* Radiance Reduction Threshold Slider */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-300 font-semibold">Min Radiance Reduction %</span>
-                    <span className="font-mono text-purple-400 font-bold">{params.radiance_reduction_threshold_pct}%</span>
+                    <span className="text-zinc-300 font-semibold">Min Radiance Reduction %</span>
+                    <span className="font-mono text-white font-bold">{params.radiance_reduction_threshold_pct}%</span>
                   </div>
                   <input
                     type="range"
@@ -563,15 +647,15 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     step="5"
                     value={params.radiance_reduction_threshold_pct}
                     onChange={(e) => setParams({ ...params, radiance_reduction_threshold_pct: parseFloat(e.target.value) })}
-                    className="w-full accent-purple-500 cursor-pointer"
+                    className="w-full accent-white cursor-pointer"
                   />
                 </div>
 
                 {/* Min Absolute Drop Slider */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-300 font-semibold">Min Absolute Radiance Drop</span>
-                    <span className="font-mono text-purple-400 font-bold">{params.min_absolute_drop_nw} nW</span>
+                    <span className="text-zinc-300 font-semibold">Min Absolute Radiance Drop</span>
+                    <span className="font-mono text-white font-bold">{params.min_absolute_drop_nw} nW</span>
                   </div>
                   <input
                     type="range"
@@ -580,9 +664,9 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     step="0.5"
                     value={params.min_absolute_drop_nw}
                     onChange={(e) => setParams({ ...params, min_absolute_drop_nw: parseFloat(e.target.value) })}
-                    className="w-full accent-purple-500 cursor-pointer"
+                    className="w-full accent-white cursor-pointer"
                   />
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-zinc-500 block">
                     Prevents dark forest flicker from triggering anomalies
                   </span>
                 </div>
@@ -590,8 +674,8 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                 {/* Min Cluster Size Slider */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[11px]">
-                    <span className="text-slate-300 font-semibold">Min Spatial Cluster Size</span>
-                    <span className="font-mono text-purple-400 font-bold">{params.min_cluster_pixels} px (~{(params.min_cluster_pixels ?? 3) * 0.22} km²)</span>
+                    <span className="text-zinc-300 font-semibold">Min Spatial Cluster Size</span>
+                    <span className="font-mono text-white font-bold">{params.min_cluster_pixels} px (~{(params.min_cluster_pixels ?? 3) * 0.22} km²)</span>
                   </div>
                   <input
                     type="range"
@@ -600,9 +684,9 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     step="1"
                     value={params.min_cluster_pixels}
                     onChange={(e) => setParams({ ...params, min_cluster_pixels: parseInt(e.target.value) })}
-                    className="w-full accent-purple-500 cursor-pointer"
+                    className="w-full accent-white cursor-pointer"
                   />
-                  <span className="text-[10px] text-slate-500 block">
+                  <span className="text-[10px] text-zinc-500 block">
                     Rejects isolated 500m noise pixels
                   </span>
                 </div>
@@ -610,7 +694,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                 <button
                   onClick={handleRunAnalysis}
                   disabled={isAnalyzing}
-                  className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer shadow-md"
+                  className="w-full py-2 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer shadow-sm transition"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
                   <span>Update Detection Criteria</span>
@@ -618,23 +702,24 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
               </div>
 
               {/* Chart of Detected Clusters */}
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                <span className="text-xs font-bold text-slate-200 block uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-[#111113] border border-zinc-800 space-y-3">
+                <span className="text-xs font-bold text-white block uppercase tracking-wider">
                   Cluster Disruption Severity (%)
                 </span>
                 {clusterChartData.length > 0 ? (
                   <div className="h-44 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={clusterChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                        <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 9 }} />
-                        <YAxis stroke="#94a3b8" tick={{ fontSize: 10 }} domain={[0, 100]} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
+                        <XAxis dataKey="name" stroke="#71717A" tick={{ fontSize: 9 }} />
+                        <YAxis stroke="#71717A" tick={{ fontSize: 10 }} domain={[0, 100]} />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: '#0f172a',
-                            borderColor: '#334155',
+                            backgroundColor: '#111113',
+                            borderColor: '#27272A',
                             borderRadius: '8px',
                             fontSize: '11px',
+                            color: '#FFFFFF',
                           }}
                         />
                         <Bar dataKey="dropPct" fill="#ef4444" radius={[4, 4, 0, 0]} />
@@ -642,7 +727,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     </ResponsiveContainer>
                   </div>
                 ) : (
-                  <div className="p-6 text-center text-xs text-slate-500 font-mono">
+                  <div className="p-6 text-center text-xs text-zinc-500 font-mono">
                     Zero disruption clusters detected under current parameters or heavy cloud cover.
                   </div>
                 )}
@@ -655,13 +740,13 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
       {/* TAB 2: SPATIAL DISRUPTION CLUSTERS */}
       {activeTab === 'clusters' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
             <div>
-              <h2 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <h2 className="text-sm font-bold text-white flex items-center space-x-2">
                 <Zap className="w-4 h-4 text-rose-400" />
                 <span>Statistically Significant Spatial Light Reduction Clusters</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Contiguous groups of 500m VIIRS DNB pixels experiencing severe luminance reduction relative to pre-disaster median baseline.
               </p>
             </div>
@@ -669,7 +754,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="py-2.5 px-3">Cluster ID</th>
                     <th className="py-2.5 px-3">Regional Sector</th>
                     <th className="py-2.5 px-3">Area (km²)</th>
@@ -680,7 +765,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     <th className="py-2.5 px-3">Centroid [Lat, Lon]</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-zinc-800 font-mono">
                   {analysisResult?.clusters.map((c) => (
                     <tr
                       key={c.cluster_id}
@@ -688,22 +773,22 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                         setSelectedCluster(c);
                         setActiveTab('console');
                       }}
-                      className="hover:bg-slate-800/40 cursor-pointer transition-colors"
+                      className="hover:bg-zinc-800/40 cursor-pointer transition-colors"
                     >
-                      <td className="py-2.5 px-3 font-sans font-bold text-slate-200">
+                      <td className="py-2.5 px-3 font-sans font-bold text-white">
                         Cluster {c.cluster_id}
                       </td>
-                      <td className="py-2.5 px-3 font-sans text-slate-300 font-semibold">
+                      <td className="py-2.5 px-3 font-sans text-zinc-300 font-semibold">
                         {c.approximate_region}
                       </td>
                       <td className="py-2.5 px-3 text-rose-400 font-bold">{c.area_sqkm} km²</td>
-                      <td className="py-2.5 px-3 text-slate-300">{c.pixel_count} px</td>
-                      <td className="py-2.5 px-3 text-slate-400">{c.mean_baseline_radiance} nW</td>
-                      <td className="py-2.5 px-3 text-slate-300">{c.mean_post_radiance} nW</td>
+                      <td className="py-2.5 px-3 text-zinc-300">{c.pixel_count} px</td>
+                      <td className="py-2.5 px-3 text-zinc-400">{c.mean_baseline_radiance} nW</td>
+                      <td className="py-2.5 px-3 text-zinc-300">{c.mean_post_radiance} nW</td>
                       <td className="py-2.5 px-3 font-bold text-rose-400">
                         -{c.mean_radiance_drop_pct}%
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400">
+                      <td className="py-2.5 px-3 text-zinc-400">
                         [{c.centroid_lat}, {c.centroid_lon}]
                       </td>
                     </tr>
@@ -718,13 +803,13 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
       {/* TAB 3: VIIRS OBSERVATIONS & QUALITY TELEMETRY */}
       {activeTab === 'telemetry' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
             <div>
-              <h2 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-purple-400" />
+              <h2 className="text-sm font-bold text-white flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-zinc-300" />
                 <span>NASA Black Marble VNP46A2 HDF5 Product Catalog & Quality Telemetry</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Exact observation dates, Mandatory_Quality_Flag cloud screening, and valid-pixel distribution for the Teesta corridor.
               </p>
             </div>
@@ -732,7 +817,7 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="py-2.5 px-3">Date</th>
                     <th className="py-2.5 px-3">Julian Scene ID</th>
                     <th className="py-2.5 px-3">Total Pixels</th>
@@ -743,27 +828,27 @@ export const NightLightPage: React.FC<NightLightPageProps> = () => {
                     <th className="py-2.5 px-3">Quality Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-zinc-800 font-mono">
                   {observations.map((obs) => (
-                    <tr key={obs.scene_id} className="hover:bg-slate-800/40">
-                      <td className="py-2.5 px-3 font-sans font-bold text-slate-200">
+                    <tr key={obs.scene_id} className="hover:bg-zinc-800/40">
+                      <td className="py-2.5 px-3 font-sans font-bold text-white">
                         {obs.date}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 text-[11px]">{obs.scene_id}</td>
-                      <td className="py-2.5 px-3 text-slate-400">{obs.total_pixels}</td>
+                      <td className="py-2.5 px-3 text-zinc-400 text-[11px]">{obs.scene_id}</td>
+                      <td className="py-2.5 px-3 text-zinc-400">{obs.total_pixels}</td>
                       <td className="py-2.5 px-3 text-emerald-400 font-bold">
                         {obs.valid_pixels}
                       </td>
-                      <td className="py-2.5 px-3 text-indigo-400 font-bold">
+                      <td className="py-2.5 px-3 text-zinc-300 font-bold">
                         {obs.cloud_pixels}
                       </td>
                       <td className="py-2.5 px-3 text-amber-400">{obs.poor_quality_pixels}</td>
-                      <td className="py-2.5 px-3 text-cyan-300 font-bold">
+                      <td className="py-2.5 px-3 text-white font-bold">
                         {obs.mean_radiance} nW
                       </td>
                       <td className="py-2.5 px-3 font-sans">
                         {obs.cloud_pixels > 1000 ? (
-                          <span className="px-2 py-0.5 rounded bg-indigo-950 border border-indigo-800 text-indigo-300 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 text-[10px] font-bold">
                             Cloud Obscured
                           </span>
                         ) : (

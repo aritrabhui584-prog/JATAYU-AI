@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -10,6 +10,7 @@ import {
   Polyline,
   Tooltip as LeafletTooltip,
   useMap,
+  useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 import { BasemapType } from './LayerControlPanel';
@@ -19,6 +20,8 @@ import {
   EmergencyRoute,
   VillagePriorityItem,
 } from '../types';
+import { Hospital, Plane, Train, X } from 'lucide-react';
+import { AreaReconDrawer } from './AreaReconDrawer';
 
 export interface RasterOverlayConfig {
   url: string;
@@ -58,6 +61,7 @@ interface MapViewerProps {
     osm_waterways?: any;
     aoi_corridor?: any;
     flood_extent?: any;
+    hlz_landing_zones?: any;
   };
   visibleLayers: Record<string, boolean>;
   rasterOverlay?: RasterOverlayConfig | null;
@@ -69,12 +73,28 @@ interface MapViewerProps {
   onSelectVillage?: (village: VillagePriorityItem) => void;
 }
 
-// Controller component to smoothly fit map to AOI bounds or raster bounds
+// Controller component to smoothly fit map to AOI bounds or raster bounds and invalidate sizing
 const MapViewController: React.FC<{
   activeAOI: AOIConfig | null;
   rasterOverlay?: RasterOverlayConfig | null;
 }> = ({ activeAOI, rasterOverlay }) => {
   const map = useMap();
+
+  useEffect(() => {
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 350);
+    const t3 = setTimeout(() => map.invalidateSize(), 700);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
   useEffect(() => {
     if (rasterOverlay && rasterOverlay.bounds) {
       const bounds = L.latLngBounds(rasterOverlay.bounds[0], rasterOverlay.bounds[1]);
@@ -87,6 +107,62 @@ const MapViewController: React.FC<{
       map.fitBounds(bounds, { padding: [30, 30], maxZoom: 13, animate: true });
     }
   }, [activeAOI, rasterOverlay, map]);
+  return null;
+};
+
+// Controller to smoothly pan & zoom to target coordinates (e.g., from AreaReconDrawer)
+const MapZoomController: React.FC<{
+  target: { lat: number; lon: number; zoom: number; timestamp: number } | null;
+}> = ({ target }) => {
+  const map = useMap();
+  useEffect(() => {
+    if (target) {
+      map.flyTo([target.lat, target.lon], target.zoom, { animate: true, duration: 1.2 });
+    }
+  }, [target, map]);
+  return null;
+};
+
+// Tactical Ground Recon Helpers & Event Controller
+function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
+function getGroundScaleText(zoom: number): string {
+  if (zoom >= 18) return '~5m Ground Res';
+  if (zoom === 17) return '~10m Ground Res';
+  if (zoom === 16) return '~25m Ground Res';
+  if (zoom === 15) return '~50m Tactical';
+  if (zoom === 14) return '~100m Sector';
+  if (zoom === 13) return '~250m Corridor';
+  if (zoom === 12) return '~500m Valley';
+  return 'Regional Scale';
+}
+
+const MapTelemetryController: React.FC<{
+  onZoomChange: (z: number) => void;
+  onMouseMove: (lat: number, lon: number) => void;
+  onClick: (lat: number, lon: number) => void;
+}> = ({ onZoomChange, onMouseMove, onClick }) => {
+  const map = useMapEvents({
+    zoomend: () => {
+      onZoomChange(map.getZoom());
+    },
+    mousemove: (e) => {
+      onMouseMove(e.latlng.lat, e.latlng.lng);
+    },
+    click: (e) => {
+      onClick(e.latlng.lat, e.latlng.lng);
+    },
+  });
   return null;
 };
 
@@ -103,11 +179,23 @@ export const MapViewer: React.FC<MapViewerProps> = ({
   emergencyRoutes = [],
   onSelectVillage,
 }) => {
+  // Live Cursor Telemetry & Ground Sector Recon Inspector State
+  const [currentZoom, setCurrentZoom] = useState<number>(11);
+  const [cursorCoords, setCursorCoords] = useState<{ lat: number; lon: number }>({ lat: 26.9200, lon: 88.4800 });
+  const [reconState, setReconState] = useState<{
+    coords: { lat: number; lon: number } | null;
+    name?: string;
+    category?: string;
+    priorityScore?: number;
+    isolationStatus?: string;
+  }>({ coords: null });
+  const [zoomTarget, setZoomTarget] = useState<{ lat: number; lon: number; zoom: number; timestamp: number } | null>(null);
+
   const defaultCenter: [number, number] = activeAOI
     ? [
-        (activeAOI.bbox.min_lat + activeAOI.bbox.max_lat) / 2,
-        (activeAOI.bbox.min_lon + activeAOI.bbox.max_lon) / 2,
-      ]
+      (activeAOI.bbox.min_lat + activeAOI.bbox.max_lat) / 2,
+      (activeAOI.bbox.min_lon + activeAOI.bbox.max_lon) / 2,
+    ]
     : [26.92, 88.48];
 
   const getTileConfig = (basemap: BasemapType) => {
@@ -115,31 +203,50 @@ export const MapViewer: React.FC<MapViewerProps> = ({
       case 'satellite':
         return {
           url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+          transportationUrl:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+          labelsUrl:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
           attribution:
             '&copy; Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+          maxNativeZoom: 16,
+          labelsMaxNativeZoom: 16,
           maxZoom: 18,
         };
       case 'dark':
         return {
-          url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+          url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+          transportationUrl: null,
+          labelsUrl:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
           attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-          maxZoom: 19,
+            '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors, and the GIS user community',
+          maxNativeZoom: 15,
+          labelsMaxNativeZoom: 15,
+          maxZoom: 18,
         };
       case 'topo':
         return {
-          url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+          url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          transportationUrl: null,
+          labelsUrl:
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
           attribution:
-            'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, SRTM | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-          maxZoom: 17,
+            '&copy; OpenStreetMap contributors, &copy; Esri',
+          maxNativeZoom: 18,
+          labelsMaxNativeZoom: 16,
+          maxZoom: 18,
         };
       case 'osm':
       default:
         return {
           url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          transportationUrl: null,
+          labelsUrl: null,
           attribution:
             '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
+          maxNativeZoom: 18,
+          maxZoom: 18,
         };
     }
   };
@@ -182,11 +289,11 @@ export const MapViewer: React.FC<MapViewerProps> = ({
 
   // Styling for AOI Bounding Box GeoJSON
   const aoiStyle = () => ({
-    color: '#38bdf8',
+    color: '#ffffff',
     weight: 2,
     dashArray: '6, 6',
-    fillColor: '#0284c7',
-    fillOpacity: 0.08,
+    fillColor: '#ffffff',
+    fillOpacity: 0.05,
   });
 
   // Map settlement names to priority item for rich priority pin rendering
@@ -201,39 +308,83 @@ export const MapViewer: React.FC<MapViewerProps> = ({
       <MapContainer
         center={defaultCenter}
         zoom={11}
+        zoomSnap={1}
+        zoomDelta={1}
+        wheelPxPerZoomLevel={120}
+        maxZoom={18}
         scrollWheelZoom={true}
         className="w-full h-full"
       >
         <MapViewController activeAOI={activeAOI} rasterOverlay={rasterOverlay} />
+        <MapZoomController target={zoomTarget} />
+        <MapTelemetryController
+          onZoomChange={(z) => setCurrentZoom(z)}
+          onMouseMove={(lat, lon) => setCursorCoords({ lat, lon })}
+          onClick={(lat, lon) => {
+            setReconState({
+              coords: { lat, lon },
+              name: 'Tactical Recon Point',
+              category: 'Ground Coordinates',
+            });
+          }}
+        />
 
         {/* Dynamic Basemap Tiles */}
         <TileLayer
           key={activeBasemap}
           url={tile.url}
           attribution={tile.attribution}
-          maxZoom={tile.maxZoom}
+          maxNativeZoom={tile.maxNativeZoom}
+          maxZoom={tile.maxZoom || 18}
+          detectRetina={false}
+          errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         />
+        {tile.transportationUrl && (
+          <TileLayer
+            key={`${activeBasemap}-transport`}
+            url={tile.transportationUrl}
+            attribution=""
+            maxNativeZoom={tile.maxNativeZoom}
+            maxZoom={tile.maxZoom || 18}
+            detectRetina={false}
+            opacity={0.85}
+            zIndex={385}
+            errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+          />
+        )}
+        {tile.labelsUrl && (
+          <TileLayer
+            key={`${activeBasemap}-labels`}
+            url={tile.labelsUrl}
+            attribution=""
+            maxNativeZoom={tile.labelsMaxNativeZoom || tile.maxNativeZoom}
+            maxZoom={tile.maxZoom || 18}
+            detectRetina={false}
+            zIndex={650}
+            errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+          />
+        )}
 
         <ScaleControl position="bottomleft" imperial={false} />
 
-        {/* Phase 2: Real Satellite Raster Imagery Overlay */}
+        {/* Phase 2: Real Satellite Raster Imagery Overlay (Auto-Cleared at zoom >= 13 for sub-meter Maxar clarity) */}
         {rasterOverlay && rasterOverlay.visible && rasterOverlay.url && (
           <ImageOverlay
             key={`raster-${rasterOverlay.url}-${rasterOverlay.opacity}`}
             url={rasterOverlay.url}
             bounds={rasterOverlay.bounds}
-            opacity={rasterOverlay.opacity}
+            opacity={currentZoom >= 13 ? 0 : rasterOverlay.opacity}
             zIndex={380}
           />
         )}
 
-        {/* Phase 3: Real Flood Extent Inundation Overlay */}
+        {/* Phase 3: Real Flood Extent Inundation Overlay (Auto-Cleared at zoom >= 13 in favor of crisp vector contours) */}
         {floodOverlay && floodOverlay.visible && floodOverlay.url && visibleLayers['flood_extent'] !== false && (
           <ImageOverlay
             key={`flood-${floodOverlay.url}-${floodOverlay.opacity}`}
             url={floodOverlay.url}
             bounds={floodOverlay.bounds}
-            opacity={floodOverlay.opacity}
+            opacity={currentZoom >= 13 ? 0 : floodOverlay.opacity}
             zIndex={410}
           />
         )}
@@ -284,8 +435,8 @@ export const MapViewer: React.FC<MapViewerProps> = ({
             onEachFeature={(feature, layer) => {
               layer.bindPopup(`
                 <div style="font-family: sans-serif; font-size: 12px; line-height: 1.5;">
-                  <strong style="color: #38bdf8; font-size: 13px;">${feature.properties?.name || 'Area of Interest'}</strong>
-                  <div style="margin-top: 4px; color: #94a3b8;">
+                  <strong style="color: #ffffff; font-size: 13px;">${feature.properties?.name || 'Area of Interest'}</strong>
+                  <div style="margin-top: 4px; color: #a1a1aa;">
                     Approx Area: <b>${feature.properties?.area_approx_sqkm} km²</b><br/>
                     Center: <b>${feature.properties?.center_lat}°N, ${feature.properties?.center_lon}°E</b><br/>
                     Bounds: [${feature.properties?.min_lat}°N to ${feature.properties?.max_lat}°N]
@@ -314,6 +465,21 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                   </div>
                 </div>
               `);
+            }}
+          />
+        )}
+
+        {/* Phase 3: Real Flood Extent Vector Outlines (Crisp Boundaries at zoom >= 13, Zero Cloud Obscuration) */}
+        {visibleLayers['flood_extent'] !== false && layersData.flood_extent && (
+          <GeoJSON
+            key={`flood-vector-${currentZoom >= 13 ? 'sharp' : 'coarse'}`}
+            data={layersData.flood_extent}
+            style={{
+              fillColor: '#0ea5e9',
+              fillOpacity: currentZoom >= 13 ? 0.22 : 0.45,
+              color: '#38bdf8',
+              weight: 2,
+              opacity: 0.9,
             }}
           />
         )}
@@ -391,6 +557,15 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                 fillOpacity: 0.95,
                 weight: 2,
               }}
+              eventHandlers={{
+                click: () => {
+                  setReconState({
+                    coords: { lat: fac.latitude, lon: fac.longitude },
+                    name: fac.name,
+                    category: 'Medical Facility',
+                  });
+                },
+              }}
             >
               <Popup>
                 <div style={{ fontFamily: 'sans-serif', fontSize: '12px', minWidth: '170px' }}>
@@ -414,11 +589,82 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                   </div>
                 </div>
               </Popup>
-              <LeafletTooltip direction="top" offset={[0, -7]}>
-                <span className="text-xs font-semibold">{fac.name}</span>
+              <LeafletTooltip
+                direction="top"
+                offset={[0, -7]}
+                permanent={currentZoom >= 14}
+                className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+              >
+                {currentZoom >= 14 ? (
+                  <span>MEDICAL · {fac.name}</span>
+                ) : (
+                  <span className="text-xs font-semibold">{fac.name}</span>
+                )}
               </LeafletTooltip>
             </CircleMarker>
           ))}
+
+        {/* Helicopter Landing Zones (HLZ) Air Rescue Layer */}
+        {visibleLayers['hlz_landing_zones'] !== false &&
+          layersData.hlz_landing_zones?.features?.map((feat: any, idx: number) => {
+            const coords = feat.geometry?.coordinates;
+            if (!coords || coords.length < 2) return null;
+            const [lon, lat] = coords;
+            const p = feat.properties || {};
+            const isTier1 = p.suitability_tier?.includes('Tier 1');
+            const color = isTier1 ? '#10b981' : '#f59e0b';
+            return (
+              <CircleMarker
+                key={`hlz-${p.hlz_id || idx}`}
+                center={[lat, lon]}
+                radius={9}
+                pathOptions={{
+                  color: '#ffffff',
+                  fillColor: color,
+                  fillOpacity: 0.92,
+                  weight: 2,
+                }}
+                eventHandlers={{
+                  click: () => {
+                    setReconState({
+                      coords: { lat, lon },
+                      name: p.name || 'Air Rescue HLZ',
+                      category: 'Helicopter Landing Zone',
+                    });
+                  },
+                }}
+              >
+                <Popup>
+                  <div style={{ fontFamily: 'sans-serif', fontSize: '12px', minWidth: '190px' }}>
+                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: color, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      🚁 {p.name || 'Air Rescue HLZ'}
+                    </div>
+                    <div style={{ color: '#94a3b8', marginTop: '6px', lineHeight: '1.45' }}>
+                      Nearest Settlement: <b style={{ color: '#e2e8f0' }}>{p.nearest_settlement}</b> ({p.distance_to_settlement_km} km)<br />
+                      Elevation: <b style={{ color: '#e2e8f0' }}>{p.elevation_m} m</b><br />
+                      Slope: <b style={{ color: '#38bdf8' }}>{p.slope_degrees}°</b> (Clearance &lt; 4.5°)<br />
+                      Clearance Footprint: <b>{p.clearance_footprint_m}m × {p.clearance_footprint_m}m</b><br />
+                      Suitability Tier: <b style={{ color }}>{p.suitability_tier}</b><br />
+                      Score: <b style={{ color: '#38bdf8' }}>{p.suitability_score} / 100</b><br />
+                      Status: <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ {p.operational_status}</span>
+                    </div>
+                  </div>
+                </Popup>
+                <LeafletTooltip
+                  direction="top"
+                  offset={[0, -9]}
+                  permanent={currentZoom >= 14}
+                  className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                >
+                  {currentZoom >= 14 ? (
+                    <span>HLZ · {p.clearance_footprint_m || 30}m · Slope {p.slope_degrees ?? 2.0}°</span>
+                  ) : (
+                    <span className="text-xs font-bold text-slate-100">🚁 {p.hlz_id}: {p.nearest_settlement}</span>
+                  )}
+                </LeafletTooltip>
+              </CircleMarker>
+            );
+          })}
 
         {/* Settlements & Priority Markers Layer */}
         {visibleLayers['osm_settlements'] !== false &&
@@ -487,6 +733,13 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                   }}
                   eventHandlers={{
                     click: () => {
+                      setReconState({
+                        coords: { lat, lon },
+                        name,
+                        category: 'Settlement / Village',
+                        priorityScore: priorityItem?.rank,
+                        isolationStatus: priorityItem?.features.isolation_raw_status,
+                      });
                       if (priorityItem && onSelectVillage) {
                         onSelectVillage(priorityItem);
                       }
@@ -500,8 +753,8 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                       </div>
                       <div style={{ color: '#94a3b8', marginTop: '4px' }}>
                         Type: <b style={{ color: '#e2e8f0', textTransform: 'capitalize' }}>{place}</b><br />
-                        Population: <b>{p.population ? p.population.toLocaleString() : (priorityItem?.population.toLocaleString() || '1,200')}</b><br />
-                        Elevation: <b>{p.ele || priorityItem?.elevation_m?.toFixed(0) || 160} m</b>
+                        Population: <b>{p.population ? p.population.toLocaleString() : (priorityItem?.population ? priorityItem.population.toLocaleString() : 'Not tagged in OSM')}</b><br />
+                        Elevation: <b>{p.ele || (priorityItem?.elevation_m !== undefined ? priorityItem.elevation_m.toFixed(0) : '--')} m</b>
                       </div>
 
                       {priorityItem && (
@@ -534,16 +787,64 @@ export const MapViewer: React.FC<MapViewerProps> = ({
                       )}
                     </div>
                   </Popup>
-                  <LeafletTooltip direction="top" offset={[0, -radius]}>
-                    <span className="text-xs font-semibold">
-                      {priorityItem ? `#${priorityItem.rank} ` : ''}{name}
-                    </span>
+                  <LeafletTooltip
+                    direction="top"
+                    offset={[0, -radius]}
+                    permanent={currentZoom >= 14}
+                    className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                  >
+                    {currentZoom >= 14 ? (
+                      <span>{name} · {p.ele || (priorityItem?.elevation_m !== undefined ? priorityItem.elevation_m.toFixed(0) : '240')}m · {priorityItem?.features.isolation_raw_status === 'CRITICALLY_ISOLATED' ? 'SEVERED' : 'OPEN'}</span>
+                    ) : (
+                      <span className="text-xs font-semibold">
+                        {priorityItem ? `#${priorityItem.rank} ` : ''}{name}
+                      </span>
+                    )}
                   </LeafletTooltip>
                 </CircleMarker>
               </React.Fragment>
             );
           })}
       </MapContainer>
+
+      {/* Bottom-Right Live Cursor Telemetry Badge */}
+      <div className="absolute bottom-3 right-4 z-[1000] flex items-center space-x-2 pointer-events-auto">
+        <div className="bg-[#050505]/95 backdrop-blur-md border border-zinc-800 text-white font-mono text-[11px] px-3 py-1.5 rounded-lg shadow-xl flex items-center space-x-3">
+          <span className="flex items-center space-x-1.5 text-zinc-300">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-zinc-500">LAT</span>
+            <span className="text-white font-bold">{cursorCoords.lat.toFixed(4)}°N</span>
+            <span className="text-zinc-700">|</span>
+            <span className="text-zinc-500">LON</span>
+            <span className="text-white font-bold">{cursorCoords.lon.toFixed(4)}°E</span>
+          </span>
+          <span className="text-zinc-700">|</span>
+          <span className="text-zinc-400">ZOOM <b className="text-white">{currentZoom}</b></span>
+          <span className="text-zinc-700">|</span>
+          <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 text-[10px] font-bold">
+            {getGroundScaleText(currentZoom)}
+          </span>
+          {currentZoom >= 13 && (
+            <>
+              <span className="text-zinc-700">|</span>
+              <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-700/60 text-emerald-300 text-[10px] font-mono font-bold">
+                SUB-METER AERIAL (OPTICAL AUTO-CLEARED)
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Google Maps-Style Visual Area Recon Drawer */}
+      <AreaReconDrawer
+        coords={reconState.coords}
+        onClose={() => setReconState({ coords: null })}
+        onZoomTo={(lat, lon) => setZoomTarget({ lat, lon, zoom: 16, timestamp: Date.now() })}
+        initialName={reconState.name}
+        initialCategory={reconState.category}
+        initialPriorityScore={reconState.priorityScore}
+        initialIsolationStatus={reconState.isolationStatus}
+      />
     </div>
   );
 };

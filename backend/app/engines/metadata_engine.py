@@ -456,6 +456,30 @@ class MetadataEngine:
             conn.commit()
             return True
 
+    def _has_local_raster(self, geotiff_path: Optional[str], scene_id: str) -> bool:
+        from app.config import BASE_DIR, GEOTIFF_DIR, LIVE_GEOTIFF_DIR
+        if geotiff_path:
+            p = Path(geotiff_path)
+            if p.exists():
+                return True
+            if (BASE_DIR / geotiff_path).exists():
+                return True
+        if (LIVE_GEOTIFF_DIR / f"{scene_id}_wgs84_clipped.tif").exists():
+            return True
+        if (LIVE_GEOTIFF_DIR / f"{scene_id}.tif").exists():
+            return True
+        if (GEOTIFF_DIR / f"{scene_id}_wgs84_clipped.tif").exists():
+            return True
+        if (GEOTIFF_DIR / f"{scene_id}_wgs84.tif").exists():
+            return True
+        if (GEOTIFF_DIR / f"{scene_id}.tif").exists():
+            return True
+        if (GEOTIFF_DIR / "sar" / f"{scene_id}.tif").exists():
+            return True
+        if (GEOTIFF_DIR / "optical" / f"{scene_id}.tif").exists():
+            return True
+        return False
+
     def get_scene_record(self, scene_id: str) -> Optional[RasterSceneRecord]:
         with self._get_connection() as conn:
             cursor = conn.cursor()
@@ -479,6 +503,7 @@ class MetadataEngine:
                 resolution_m=d.get("resolution_m"),
                 geotiff_path=d.get("geotiff_path"),
                 thumbnail_url=d.get("thumbnail_url"),
+                has_local_raster=self._has_local_raster(d.get("geotiff_path"), d["id"]),
                 assets=json.loads(d.get("assets_json") or "{}"),
                 metadata=json.loads(d.get("metadata_json") or "{}"),
             )
@@ -519,9 +544,12 @@ class MetadataEngine:
                     resolution_m=d.get("resolution_m"),
                     geotiff_path=d.get("geotiff_path"),
                     thumbnail_url=d.get("thumbnail_url"),
+                    has_local_raster=self._has_local_raster(d.get("geotiff_path"), d["id"]),
                     assets=json.loads(d.get("assets_json") or "{}"),
                     metadata=json.loads(d.get("metadata_json") or "{}"),
                 ))
+            # Prioritize scenes with local rasters first
+            records.sort(key=lambda s: not s.has_local_raster)
             return records
 
     def update_scene_status(self, scene_id: str, status: SceneProcessingStatus, 

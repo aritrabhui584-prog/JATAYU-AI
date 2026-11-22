@@ -39,6 +39,8 @@ def analyze_flood(params: FloodAnalysisParams):
     try:
         result = flood_engine.run_flood_analysis(params)
         return result
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Flood analysis execution failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Flood analysis failed: {str(e)}")
@@ -51,10 +53,12 @@ def get_latest_flood_analysis():
     if flood_engine.latest_result:
         return flood_engine.latest_result
 
-    # Default to first registered Sentinel-1 scene or seed scene
-    scenes = metadata_engine.list_scene_records(mission="Sentinel-1", limit=2)
-    post_id = scenes[0].id if scenes else "S1D_IW_GRDH_1SDV_20261118T000248_00A8BE"
-    pre_id = scenes[1].id if len(scenes) > 1 else None
+    # Default to authentic Sentinel-1 scene pair if available
+    scenes = metadata_engine.list_scene_records(mission="Sentinel-1", limit=10)
+    post_scene = next((s for s in scenes if "POST" in s.id.upper() or "20231010" in s.id), None)
+    pre_scene = next((s for s in scenes if "PRE" in s.id.upper() or "20230928" in s.id), None)
+    post_id = post_scene.id if post_scene else (scenes[0].id if scenes else "S1A_IW_GRDH_1SDV_20231010_TEESTA_POST")
+    pre_id = pre_scene.id if pre_scene else (scenes[1].id if len(scenes) > 1 else None)
 
     params = FloodAnalysisParams(
         post_event_scene_id=post_id,
@@ -65,8 +69,11 @@ def get_latest_flood_analysis():
         elevation_max_m=1200.0,
         min_patch_pixels=5
     )
-    result = flood_engine.run_flood_analysis(params)
-    return result
+    try:
+        result = flood_engine.run_flood_analysis(params)
+        return result
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 @router.post("/scenario", response_model=FloodAnalysisResult)
 def run_water_level_scenario(params: ScenarioAnalysisParams):
@@ -80,6 +87,8 @@ def run_water_level_scenario(params: ScenarioAnalysisParams):
     try:
         result = flood_engine.run_scenario_analysis(params)
         return result
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Scenario analysis failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Scenario analysis failed: {str(e)}")
@@ -90,11 +99,14 @@ def get_terrain_analysis():
     Retrieves DEM terrain metrics: elevation range, hypsometric histogram,
     mean slope in degrees, and slope hazard distribution (% flat, % moderate, % steep).
     """
-    active_aoi = aoi_engine.get_active_aoi()
-    aoi_bbox = (active_aoi.bbox.min_lon, active_aoi.bbox.min_lat, active_aoi.bbox.max_lon, active_aoi.bbox.max_lat)
-    dem_tif = terrain_engine.create_or_load_teesta_dem(bbox=aoi_bbox)
-    result = terrain_engine.analyze_terrain(dem_tif)
-    return result
+    try:
+        dem_tif = terrain_engine.get_teesta_dem()
+        result = terrain_engine.analyze_terrain(dem_tif)
+        return result
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Terrain analysis failed: {str(e)}")
 
 @router.get("/render")
 def render_flood_overlay(

@@ -74,6 +74,7 @@ class RasterSceneRecord(BaseModel):
     resolution_m: Optional[float] = None
     geotiff_path: Optional[str] = None
     thumbnail_url: Optional[str] = None
+    has_local_raster: bool = False
     assets: Dict[str, Any] = Field(default_factory=dict)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 

@@ -1,0 +1,15 @@
+services:
+  jatayu:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jatayu-ai
+    ports:
+      - "8000:8000"
+    environment:
+      - EARTHDATA_TOKEN=${EARTHDATA_TOKEN:-}
+      - COPERNICUS_CLIENT_ID=${COPERNICUS_CLIENT_ID:-}
+      - COPERNICUS_CLIENT_SECRET=${COPERNICUS_CLIENT_SECRET:-}
+    volumes:
+      - ./backend/data:/app/backend/data
+    restart: unless-stopped

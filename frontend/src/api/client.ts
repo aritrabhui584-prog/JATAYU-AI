@@ -25,9 +25,19 @@ import {
   PriorityRankingParams,
   VillagePriorityItem,
   UnifiedSystemOverview,
+  HLZFeatureCollection,
+  GloFASEarlyWarningResponse,
+  MultiModalRescueResponse,
+  ScoutRegionRequest,
+  ScoutRegionResult,
+  SurveillanceDates,
+  LiveSatelliteSyncStatus,
+  PlaceReconData,
+  HistoricalBestGranule,
+  LatestNightPass,
 } from '../types';
 
-const API_BASE = '/api';
+const API_BASE = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api`;
 
 export async function fetchActiveAOI(): Promise<AOIConfig> {
   const res = await fetch(`${API_BASE}/aoi/active`);
@@ -434,6 +444,10 @@ export function getPriorityExportCSVUrl(runId?: string): string {
   return runId ? `${API_BASE}/priority/export/csv?run_id=${encodeURIComponent(runId)}` : `${API_BASE}/priority/export/csv`;
 }
 
+export function getPriorityExportSitrepPdfUrl(runId?: string): string {
+  return runId ? `${API_BASE}/priority/export/sitrep.pdf?run_id=${encodeURIComponent(runId)}` : `${API_BASE}/priority/export/sitrep.pdf`;
+}
+
 // ----------------------------------------------------
 // Phase 7: Unified System Overview APIs
 // ----------------------------------------------------
@@ -443,6 +457,163 @@ export async function fetchSystemOverview(): Promise<UnifiedSystemOverview> {
   if (!res.ok) throw new Error('Failed to fetch unified system overview');
   return res.json();
 }
+
+// ----------------------------------------------------
+// Operational Extensions: HLZ & GloFAS Early Warning
+// ----------------------------------------------------
+
+export async function fetchHelicopterLandingZones(
+  maxSlope: number = 4.5,
+  minCells: number = 4,
+  maxDistanceKm: number = 3.5
+): Promise<HLZFeatureCollection> {
+  const params = new URLSearchParams({
+    max_slope_deg: maxSlope.toString(),
+    min_clearance_cells: minCells.toString(),
+    max_distance_to_village_km: maxDistanceKm.toString(),
+  });
+  const res = await fetch(`${API_BASE}/terrain/landing-zones?${params.toString()}`);
+  if (!res.ok) throw new Error('Failed to fetch helicopter landing zones');
+  return res.json();
+}
+
+export async function fetchEarlyWarningTelemetry(): Promise<GloFASEarlyWarningResponse> {
+  const res = await fetch(`${API_BASE}/overview/early-warning`);
+  if (!res.ok) throw new Error('Failed to fetch GloFAS early warning telemetry');
+  return res.json();
+}
+
+// ----------------------------------------------------
+// Multi-Modal Pre-Disaster Rescue Routing APIs
+// ----------------------------------------------------
+
+export async function fetchMultiModalRescue(params?: RoadExposureParams): Promise<MultiModalRescueResponse> {
+  const res = await fetch(`${API_BASE}/isolation/multimodal-rescue`);
+  if (!res.ok) throw new Error('Failed to fetch multi-modal rescue plans');
+  return res.json();
+}
+
+export async function runMultiModalRescueAnalysis(params?: RoadExposureParams): Promise<MultiModalRescueResponse> {
+  const res = await fetch(`${API_BASE}/isolation/multimodal-rescue`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params || {}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Multi-modal rescue calculation failed' }));
+    throw new Error(err.detail || 'Multi-modal rescue calculation failed');
+  }
+  return res.json();
+}
+
+export async function fetchRailwayInfrastructure(): Promise<any> {
+  const res = await fetch(`${API_BASE}/isolation/railways`);
+  if (!res.ok) throw new Error('Failed to fetch railway infrastructure');
+  return res.json();
+}
+
+// ----------------------------------------------------
+// All-India Dynamic Basin Scouting & Surveillance APIs
+// ----------------------------------------------------
+
+export async function scoutRegion(req: ScoutRegionRequest): Promise<ScoutRegionResult> {
+  const res = await fetch(`${API_BASE}/aoi/scout`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Scout query failed' }));
+    throw new Error(err.detail || 'Scout query failed');
+  }
+  return res.json();
+}
+
+export async function fetchSurveillanceDates(anchorDate?: string): Promise<SurveillanceDates> {
+  const q = anchorDate ? `?anchor_date=${encodeURIComponent(anchorDate)}` : '';
+  const res = await fetch(`${API_BASE}/aoi/surveillance-dates${q}`);
+  if (!res.ok) throw new Error('Failed to fetch temporal surveillance dates');
+  return res.json();
+}
+
+export async function fetchLiveSyncStatus(): Promise<LiveSatelliteSyncStatus> {
+  const res = await fetch(`${API_BASE}/overview/live-sync`);
+  if (!res.ok) throw new Error('Failed to fetch live satellite sync telemetry');
+  return res.json();
+}
+
+export async function triggerLiveRefresh(): Promise<LiveSatelliteSyncStatus> {
+  const res = await fetch(`${API_BASE}/system/refresh-live`, { method: 'POST' });
+  if (!res.ok) {
+    // fallback to overview refresh
+    const fb = await fetch(`${API_BASE}/overview/refresh-live`, { method: 'POST' });
+    if (!fb.ok) throw new Error('Live satellite refresh failed');
+    return fb.json();
+  }
+  return res.json();
+}
+
+export async function fetchPlaceRecon(lat: number, lon: number): Promise<PlaceReconData> {
+  const res = await fetch(`${API_BASE}/terrain/place-recon?lat=${lat}&lon=${lon}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Place recon lookup failed' }));
+    throw new Error(err.detail || 'Place recon lookup failed');
+  }
+  return res.json();
+}
+
+export async function fetchHistoricalBest(params: {
+  year: number;
+  date?: string;
+  west?: number;
+  south?: number;
+  east?: number;
+  north?: number;
+  mission?: string;
+  max_cloud?: number;
+}): Promise<HistoricalBestGranule> {
+  const query = new URLSearchParams();
+  query.set('year', params.year.toString());
+  if (params.date) query.set('date', params.date);
+  if (params.west !== undefined) query.set('west', params.west.toString());
+  if (params.south !== undefined) query.set('south', params.south.toString());
+  if (params.east !== undefined) query.set('east', params.east.toString());
+  if (params.north !== undefined) query.set('north', params.north.toString());
+  if (params.mission) query.set('mission', params.mission);
+  if (params.max_cloud !== undefined) query.set('max_cloud', params.max_cloud.toString());
+
+  const res = await fetch(`${API_BASE}/raster/historical-best?${query.toString()}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to fetch historical best granule' }));
+    throw new Error(err.detail || 'Failed to fetch historical best granule');
+  }
+  return res.json();
+}
+
+export async function fetchLatestNightPass(params?: {
+  west?: number;
+  south?: number;
+  east?: number;
+  north?: number;
+  date?: string;
+}): Promise<LatestNightPass> {
+  const query = new URLSearchParams();
+  if (params?.west !== undefined) query.set('west', params.west.toString());
+  if (params?.south !== undefined) query.set('south', params.south.toString());
+  if (params?.east !== undefined) query.set('east', params.east.toString());
+  if (params?.north !== undefined) query.set('north', params.north.toString());
+  if (params?.date) query.set('date', params.date);
+
+  const qs = query.toString() ? `?${query.toString()}` : '';
+  const res = await fetch(`${API_BASE}/raster/latest-night-pass${qs}`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Failed to fetch latest night pass' }));
+    throw new Error(err.detail || 'Failed to fetch latest night pass');
+  }
+  return res.json();
+}
+
+
 
 
 

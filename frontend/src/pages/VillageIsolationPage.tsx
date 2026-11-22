@@ -9,6 +9,8 @@ import {
   EmergencyFacility,
   RouteAlternative,
   AOIConfig,
+  MultiModalRescueResponse,
+  SettlementMultiModalPlan,
 } from '../types';
 import * as api from '../api/client';
 import {
@@ -34,6 +36,9 @@ import {
   Activity,
   AlertCircle,
   CheckCircle2,
+  Train,
+  Plane,
+  Navigation,
 } from 'lucide-react';
 import {
   BarChart,
@@ -54,22 +59,44 @@ import {
   Tooltip as LeafletTooltip,
   ScaleControl,
   useMap,
+  useMapEvents,
 } from 'react-leaflet';
 import L from 'leaflet';
 
 interface VillageIsolationPageProps {
   isolationData?: SettlementIsolationResponse | null;
   roadStats?: RoadNetworkStats | null;
+  layersData?: {
+    osm_roads?: any;
+    osm_settlements?: any;
+    osm_waterways?: any;
+    aoi_corridor?: any;
+    hlz_landing_zones?: any;
+  };
   onRefreshIsolation?: () => Promise<void>;
   isLoading?: boolean;
   activeAOI?: AOIConfig | null;
 }
 
-// Controller to pan/zoom when a village or route is selected
+// Controller to pan/zoom when a village or route is selected and invalidate sizing
 const RouteFocusController: React.FC<{
   selectedVillage: VillageAccessibility | null;
 }> = ({ selectedVillage }) => {
   const map = useMap();
+
+  useEffect(() => {
+    map.invalidateSize();
+    const t1 = setTimeout(() => map.invalidateSize(), 150);
+    const t2 = setTimeout(() => map.invalidateSize(), 350);
+    const handleResize = () => map.invalidateSize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [map]);
+
   useEffect(() => {
     if (!selectedVillage) return;
 
@@ -90,25 +117,90 @@ const RouteFocusController: React.FC<{
   return null;
 };
 
+// Tactical Ground Recon Helpers & Event Controller
+function getGroundScaleText(zoom: number): string {
+  if (zoom >= 18) return '~5m Ground Res';
+  if (zoom === 17) return '~10m Ground Res';
+  if (zoom === 16) return '~25m Ground Res';
+  if (zoom === 15) return '~50m Tactical';
+  if (zoom === 14) return '~100m Sector';
+  if (zoom === 13) return '~250m Corridor';
+  if (zoom === 12) return '~500m Valley';
+  return 'Regional Scale';
+}
+
+const MapTelemetryController: React.FC<{
+  onZoomChange: (z: number) => void;
+  onMouseMove: (lat: number, lon: number) => void;
+}> = ({ onZoomChange, onMouseMove }) => {
+  useMapEvents({
+    zoomend: (e) => {
+      onZoomChange(e.target.getZoom());
+    },
+    mousemove: (e) => {
+      onMouseMove(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+};
+
+const BASEMAP_TILES = {
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    transportationUrl:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+    labelsUrl:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, Maxar, Earthstar Geographics',
+    maxNativeZoom: 16,
+    labelsMaxNativeZoom: 16,
+    maxZoom: 18,
+    name: 'Satellite Hybrid View',
+  },
+  dark: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    transportationUrl: null,
+    labelsUrl:
+      'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+    attribution: '&copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
+    maxNativeZoom: 15,
+    labelsMaxNativeZoom: 15,
+    maxZoom: 18,
+    name: 'Tactical Dark',
+  },
+  osm: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    transportationUrl: null,
+    labelsUrl: null,
+    attribution: '&copy; OpenStreetMap contributors',
+    maxNativeZoom: 18,
+    maxZoom: 18,
+    name: 'OpenStreetMap Street',
+  },
+};
+
 export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
   isLoading: isParentLoading,
+  layersData,
 }) => {
-  // Phase 4 Engine State
+  // Live Cursor Telemetry State
+  const [currentZoom, setCurrentZoom] = useState<number>(11);
+  const [cursorCoords, setCursorCoords] = useState<{ lat: number; lon: number }>({ lat: 26.9200, lon: 88.4800 });
   const [analysisResult, setAnalysisResult] = useState<RoadIsolationAnalysisResult | null>(null);
+  const [multimodalPlan, setMultimodalPlan] = useState<MultiModalRescueResponse | null>(null);
   const [facilities, setFacilities] = useState<EmergencyFacility[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Active UI tab
+  const [activeBasemap, setActiveBasemap] = useState<'satellite' | 'dark' | 'osm'>('satellite');
   const [activeTab, setActiveTab] = useState<'console' | 'rules' | 'facilities'>('console');
 
-  // Interactive Selection
   const [selectedVillage, setSelectedVillage] = useState<VillageAccessibility | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterLevel, setFilterLevel] = useState<string>('ALL');
   const [showAssumptions, setShowAssumptions] = useState(false);
+  const [showHLZ, setShowHLZ] = useState(true);
 
-  // Configurable Exposure Parameters
   const [exposureParams, setExposureParams] = useState<RoadExposureParams>({
     critical_water_depth_m: 0.35,
     bridge_clearance_bonus_m: 3.5,
@@ -117,7 +209,6 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
     slope_debris_hazard_degrees: 18.0,
   });
 
-  // Initial Data Fetch
   useEffect(() => {
     loadInitialData();
   }, []);
@@ -126,13 +217,16 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
     setIsAnalyzing(true);
     setErrorMsg(null);
     try {
-      const [analysis, facs] = await Promise.all([
+      const [analysis, facs, mm] = await Promise.all([
         api.fetchLatestIsolationAnalysis(),
         api.fetchEmergencyFacilities(),
+        api.fetchMultiModalRescue().catch(() => null),
       ]);
       setAnalysisResult(analysis);
       setFacilities(facs);
-      // Auto-select first isolated village if available
+      if (mm) {
+        setMultimodalPlan(mm);
+      }
       if (analysis.isolated_villages.length > 0) {
         setSelectedVillage(analysis.isolated_villages[0]);
       } else if (analysis.accessible_villages.length > 0) {
@@ -164,7 +258,6 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
     }
   };
 
-  // Combine all settlements for filtering
   const allVillages: VillageAccessibility[] = [
     ...(analysisResult?.isolated_villages || []),
     ...(analysisResult?.potentially_isolated_villages || []),
@@ -177,7 +270,6 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
     return matchesSearch && matchesLevel;
   });
 
-  // Chart data
   const chartData = [
     {
       name: 'Critically Isolated',
@@ -199,20 +291,20 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-5">
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className="p-2 rounded-xl bg-cyan-950/60 border border-cyan-800/60 text-cyan-400">
+            <div className="p-2 rounded-xl bg-black border border-zinc-800 text-white">
               <Network className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-100 flex items-center space-x-2">
+              <h1 className="text-xl font-bold text-white flex items-center space-x-2">
                 <span>Village Road-Network Isolation Analytics</span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-800 text-cyan-300">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-300">
                   Phase 4 Engine
                 </span>
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Topological network accessibility computed with OSMnx & NetworkX from real Teesta road vectors, DEM terrain slope, and Sentinel-1 flood extents.
               </p>
             </div>
@@ -224,16 +316,16 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           <a
             href={api.getIsolationExportGeoJSONUrl(analysisResult?.id)}
             download
-            className="px-3.5 py-2 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-500 text-slate-200 text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
+            className="px-3.5 py-2 rounded-lg bg-zinc-900 border border-zinc-700 hover:border-white text-white text-xs font-semibold flex items-center space-x-1.5 transition-all shadow-sm"
           >
-            <Download className="w-3.5 h-3.5 text-slate-300" />
+            <Download className="w-3.5 h-3.5 text-zinc-300" />
             <span>Export GeoJSON</span>
           </a>
 
           <button
             onClick={handleRunAnalysis}
             disabled={isAnalyzing}
-            className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center space-x-2 shadow-lg shadow-cyan-950/50 disabled:opacity-50 cursor-pointer transition-all"
+            className="px-4 py-2 rounded-lg bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center space-x-2 shadow-sm disabled:opacity-50 cursor-pointer transition-all"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isAnalyzing ? 'animate-spin' : ''}`} />
             <span>{isAnalyzing ? 'Recalculating...' : 'Recalculate Routes'}</span>
@@ -250,7 +342,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </div>
           <button
             onClick={() => setErrorMsg(null)}
-            className="text-slate-400 hover:text-rose-300 text-xs underline cursor-pointer"
+            className="text-zinc-400 hover:text-rose-300 text-xs underline cursor-pointer"
           >
             Dismiss
           </button>
@@ -259,19 +351,19 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 block font-semibold">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
+          <span className="text-[10px] uppercase tracking-wider text-zinc-400 block font-semibold">
             Road Network
           </span>
-          <div className="text-xl font-bold text-slate-100 font-mono">
-            {analysisResult?.total_road_network_km ?? '--'} <span className="text-xs text-slate-400 font-normal">km</span>
+          <div className="text-xl font-bold text-white font-mono">
+            {analysisResult?.total_road_network_km ?? '--'} <span className="text-xs text-zinc-400 font-normal">km</span>
           </div>
-          <span className="text-[10px] text-slate-400 block">
+          <span className="text-[10px] text-zinc-400 block">
             {analysisResult?.total_segments_count ?? '--'} routable edges
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-rose-400 block font-semibold flex items-center justify-between">
             <span>Closed Breaches</span>
             {analysisResult?.severed_arteries_count ? (
@@ -288,7 +380,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-emerald-400 block font-semibold">
             Accessible
           </span>
@@ -300,7 +392,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-amber-400 block font-semibold">
             Potential Detours
           </span>
@@ -312,7 +404,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-red-400 block font-semibold">
             Critically Cut Off
           </span>
@@ -325,7 +417,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1">
+        <div className="p-3.5 rounded-xl bg-[#111113] border border-zinc-800 space-y-1">
           <span className="text-[10px] uppercase tracking-wider text-orange-400 block font-semibold">
             Isolated Population
           </span>
@@ -339,13 +431,13 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center space-x-2 border-b border-slate-800">
+      <div className="flex items-center space-x-2 border-b border-zinc-800">
         <button
           onClick={() => setActiveTab('console')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'console'
-              ? 'border-cyan-400 text-cyan-300 bg-cyan-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Compass className="w-3.5 h-3.5" />
@@ -356,8 +448,8 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           onClick={() => setActiveTab('rules')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'rules'
-              ? 'border-cyan-400 text-cyan-300 bg-cyan-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Sliders className="w-3.5 h-3.5" />
@@ -368,8 +460,8 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           onClick={() => setActiveTab('facilities')}
           className={`px-4 py-2 text-xs font-semibold flex items-center space-x-2 border-b-2 transition-all cursor-pointer ${
             activeTab === 'facilities'
-              ? 'border-cyan-400 text-cyan-300 bg-cyan-950/20'
-              : 'border-transparent text-slate-400 hover:text-slate-200'
+              ? 'border-white text-white bg-zinc-900/60'
+              : 'border-transparent text-zinc-400 hover:text-white'
           }`}
         >
           <Hospital className="w-3.5 h-3.5" />
@@ -384,41 +476,94 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Map Column (2/3 width) */}
             <div className="lg:col-span-2 space-y-3">
-              <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl relative">
+              <div className="rounded-2xl bg-[#111113] border border-zinc-800 overflow-hidden shadow-2xl relative">
                 {/* Map Control Bar */}
-                <div className="p-3 bg-slate-950/80 border-b border-slate-800 flex items-center justify-between text-xs">
+                <div className="p-3 bg-black border-b border-zinc-800 flex items-center justify-between text-xs">
                   <div className="flex items-center space-x-3">
-                    <span className="font-bold text-slate-200 flex items-center space-x-1.5">
-                      <Layers className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="font-bold text-white flex items-center space-x-1.5">
+                      <Layers className="w-3.5 h-3.5 text-zinc-300" />
                       <span>Routable Accessibility Map</span>
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-[11px] text-zinc-400">
                       Click any village or road cut to inspect
                     </span>
                   </div>
 
                   {/* Legend badges */}
                   <div className="flex items-center space-x-3 text-[10px]">
-                    <span className="flex items-center space-x-1 text-slate-300">
+                    <span className="flex items-center space-x-1 text-zinc-300">
                       <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" />
                       <span>Isolated</span>
                     </span>
-                    <span className="flex items-center space-x-1 text-slate-300">
+                    <span className="flex items-center space-x-1 text-zinc-300">
                       <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
                       <span>Detour</span>
                     </span>
-                    <span className="flex items-center space-x-1 text-slate-300">
+                    <span className="flex items-center space-x-1 text-zinc-300">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
                       <span>Accessible</span>
                     </span>
-                    <span className="flex items-center space-x-1 text-slate-300">
-                      <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 inline-block" />
+                    <span className="flex items-center space-x-1 text-zinc-300">
+                      <span className="w-2.5 h-2.5 rounded-sm bg-white inline-block" />
                       <span>Facility</span>
                     </span>
-                    <span className="flex items-center space-x-1 text-slate-300">
+                    <span className="flex items-center space-x-1 text-zinc-300">
                       <span className="w-3 h-0.5 bg-rose-500 inline-block" />
                       <span>Breach</span>
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowHLZ(!showHLZ)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-semibold flex items-center space-x-1 transition cursor-pointer ${
+                        showHLZ
+                          ? 'bg-white text-black font-bold'
+                          : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
+                      }`}
+                      title="Toggle DEM-detected Air Rescue Helicopter Landing Zones (Helipads)"
+                    >
+                      <span>🚁 Air Rescue HLZ</span>
+                      <span className="font-mono text-[9px]">({layersData?.hlz_landing_zones?.features?.length || 21})</span>
+                    </button>
+
+                    {/* Quick Basemap Switcher */}
+                    <div className="flex items-center space-x-1 bg-black border border-zinc-800 rounded-lg p-0.5 ml-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('satellite')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'satellite'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="High-Resolution Esri Satellite Imagery with Reference Labels"
+                      >
+                        🛰️ Satellite
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('dark')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'dark'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="Tactical Dark Gray Basemap (smoothly scaled above zoom 13)"
+                      >
+                        🌑 Dark
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveBasemap('osm')}
+                        className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer ${
+                          activeBasemap === 'osm'
+                            ? 'bg-white text-black font-bold'
+                            : 'text-zinc-400 hover:text-white'
+                        }`}
+                        title="Keyless OpenStreetMap Street Map"
+                      >
+                        🗺️ OSM
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -427,16 +572,107 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                   <MapContainer
                     center={[26.92, 88.48]}
                     zoom={11}
+                    zoomSnap={1}
+                    zoomDelta={1}
+                    wheelPxPerZoomLevel={120}
+                    maxZoom={18}
                     scrollWheelZoom={true}
-                    className="h-full w-full bg-slate-950"
+                    className="h-full w-full bg-[#050505]"
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://carto.com/">CartoDB</a> Dark Matter'
-                      url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      key={`iso-base-${activeBasemap}`}
+                      attribution={BASEMAP_TILES[activeBasemap].attribution}
+                      url={BASEMAP_TILES[activeBasemap].url}
+                      maxNativeZoom={BASEMAP_TILES[activeBasemap].maxNativeZoom}
+                      maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+                      detectRetina={false}
+                      errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
                     />
+                    {BASEMAP_TILES[activeBasemap].transportationUrl && (
+                      <TileLayer
+                        key={`iso-transport-${activeBasemap}`}
+                        attribution=""
+                        url={BASEMAP_TILES[activeBasemap].transportationUrl!}
+                        maxNativeZoom={BASEMAP_TILES[activeBasemap].maxNativeZoom}
+                        maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+                        detectRetina={false}
+                        opacity={0.85}
+                        zIndex={385}
+                        errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+                      />
+                    )}
+                    {BASEMAP_TILES[activeBasemap].labelsUrl && (
+                      <TileLayer
+                        key={`iso-labels-${activeBasemap}`}
+                        attribution=""
+                        url={BASEMAP_TILES[activeBasemap].labelsUrl!}
+                        maxNativeZoom={BASEMAP_TILES[activeBasemap].labelsMaxNativeZoom}
+                        maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+                        detectRetina={false}
+                        zIndex={650}
+                        errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
+                      />
+                    )}
 
                     <ScaleControl position="bottomleft" />
                     <RouteFocusController selectedVillage={selectedVillage} />
+                    <MapTelemetryController
+                      onZoomChange={(z) => setCurrentZoom(z)}
+                      onMouseMove={(lat, lon) => setCursorCoords({ lat, lon })}
+                    />
+
+                    {/* Helicopter Landing Zones (HLZ) Air Rescue Layer */}
+                    {showHLZ &&
+                      layersData?.hlz_landing_zones?.features?.map((feat: any, idx: number) => {
+                        const coords = feat.geometry?.coordinates;
+                        if (!coords || coords.length < 2) return null;
+                        const [lon, lat] = coords;
+                        const p = feat.properties || {};
+                        const isTier1 = p.suitability_tier?.includes('Tier 1');
+                        const color = isTier1 ? '#10b981' : '#f59e0b';
+                        return (
+                          <CircleMarker
+                            key={`iso-hlz-${p.hlz_id || idx}`}
+                            center={[lat, lon]}
+                            radius={8}
+                            pathOptions={{
+                              color: '#ffffff',
+                              fillColor: color,
+                              fillOpacity: 0.92,
+                              weight: 2,
+                            }}
+                          >
+                            <Popup>
+                              <div style={{ fontFamily: 'sans-serif', fontSize: '12px', minWidth: '190px' }}>
+                                <div style={{ fontWeight: 'bold', fontSize: '13px', color: color }}>
+                                  🚁 {p.name || 'Air Rescue HLZ'}
+                                </div>
+                                <div style={{ color: '#475569', marginTop: '6px', lineHeight: '1.45', fontSize: '11px' }}>
+                                  Nearest Settlement: <b style={{ color: '#0f172a' }}>{p.nearest_settlement}</b> ({p.distance_to_settlement_km} km)<br />
+                                  Elevation: <b>{p.elevation_m} m</b><br />
+                                  Slope: <b style={{ color: '#0284c7' }}>{p.slope_degrees}°</b> (Clearance &lt; 4.5°)<br />
+                                  Clearance: <b>{p.clearance_footprint_m}m × {p.clearance_footprint_m}m</b><br />
+                                  Suitability Tier: <b style={{ color }}>{p.suitability_tier}</b><br />
+                                  Score: <b>{p.suitability_score} / 100</b><br />
+                                  Status: <span style={{ color: '#10b981', fontWeight: 'bold' }}>✓ {p.operational_status}</span>
+                                </div>
+                              </div>
+                            </Popup>
+                            <LeafletTooltip
+                              direction="top"
+                              offset={[0, -8]}
+                              permanent={currentZoom >= 14}
+                              className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                            >
+                              {currentZoom >= 14 ? (
+                                <span>HLZ · {p.clearance_footprint_m || 30}m · Slope {p.slope_degrees ?? 2.0}°</span>
+                              ) : (
+                                <span className="text-xs font-bold">🚁 {p.hlz_id}: {p.nearest_settlement}</span>
+                              )}
+                            </LeafletTooltip>
+                          </CircleMarker>
+                        );
+                      })}
 
                     {/* Closed Road Breaches (Red lines) */}
                     {analysisResult?.closed_road_segments.map((seg, idx) => {
@@ -453,6 +689,13 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                             dashArray: '6, 6',
                           }}
                         >
+                          <LeafletTooltip
+                            permanent={currentZoom >= 14}
+                            direction="top"
+                            className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                          >
+                            <span>BREACH · {seg.name} ({seg.estimated_water_depth_m ? `${seg.estimated_water_depth_m}m` : '0.4m'})</span>
+                          </LeafletTooltip>
                           <Popup>
                             <div className="text-xs p-1 space-y-1 text-slate-900">
                               <div className="font-bold text-rose-600 flex items-center space-x-1">
@@ -471,7 +714,55 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       );
                     })}
 
-                    {/* Selected Village Alternative Detour Route (Orange solid) */}
+                    {/* Pre-Disaster CLOSING_SOON Roads: Amber Dashed */}
+                    {multimodalPlan?.roadway_network?.closing_soon_segments?.map((seg: any, idx: number) => {
+                      if (!seg.coordinates || seg.coordinates.length < 2) return null;
+                      const latlngs = seg.coordinates.map((c: any) => [c[1], c[0]] as [number, number]);
+                      return (
+                        <Polyline
+                          key={`closing-soon-${seg.osm_id}-${idx}`}
+                          positions={latlngs}
+                          pathOptions={{
+                            color: '#f59e0b',
+                            weight: 4,
+                            opacity: 0.95,
+                            dashArray: '8, 8',
+                          }}
+                        >
+                          <LeafletTooltip sticky>
+                            <div className="p-1 text-xs">
+                              <span className="font-bold text-amber-500">⚠ CLOSING SOON (T+{seg.estimated_closure_hours}h)</span>
+                              <div className="text-slate-900 font-semibold">{seg.name}</div>
+                              <div className="text-slate-600 text-[10px]">{seg.closure_reason}</div>
+                            </div>
+                          </LeafletTooltip>
+                        </Polyline>
+                      );
+                    })}
+
+                    {/* Railway Evacuation Stations */}
+                    {multimodalPlan?.railway_system?.active_railheads?.map((stn: any, idx: number) => (
+                      <CircleMarker
+                        key={`stn-safe-${stn.osm_id || idx}`}
+                        center={[stn.coordinates[1], stn.coordinates[0]]}
+                        radius={7}
+                        pathOptions={{
+                          color: '#ffffff',
+                          fillColor: '#FFFFFF',
+                          fillOpacity: 1.0,
+                          weight: 2,
+                        }}
+                      >
+                        <LeafletTooltip sticky>
+                          <div className="text-xs p-0.5">
+                            <span className="font-bold text-zinc-900">🚂 {stn.name} ({stn.code})</span>
+                            <div className="text-slate-700 text-[10px]">{stn.evacuation_role}</div>
+                          </div>
+                        </LeafletTooltip>
+                      </CircleMarker>
+                    ))}
+
+                    {/* Selected Village Alternative Detour Route */}
                     {selectedVillage?.best_route?.alternative_path && selectedVillage.best_route.alternative_path.length > 0 && (
                       <Polyline
                         positions={selectedVillage.best_route.alternative_path.map((c) => [c[1], c[0]] as [number, number])}
@@ -487,14 +778,14 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       </Polyline>
                     )}
 
-                    {/* Selected Village Baseline Direct Route (Cyan dashed) */}
+                    {/* Selected Village Baseline Direct Route */}
                     {selectedVillage?.best_route?.baseline_path && selectedVillage.best_route.baseline_path.length > 0 && (
                       <Polyline
                         positions={selectedVillage.best_route.baseline_path.map((c) => [c[1], c[0]] as [number, number])}
                         pathOptions={{
-                          color: '#06b6d4',
+                          color: '#FFFFFF',
                           weight: 2.5,
-                          opacity: 0.6,
+                          opacity: 0.7,
                           dashArray: '4, 8',
                         }}
                       >
@@ -511,15 +802,15 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                         center={[fac.latitude, fac.longitude]}
                         radius={7}
                         pathOptions={{
-                          color: '#06b6d4',
-                          fillColor: '#0891b2',
+                          color: '#FFFFFF',
+                          fillColor: '#FFFFFF',
                           fillOpacity: 0.9,
                           weight: 2,
                         }}
                       >
                         <Popup>
                           <div className="text-xs p-1 space-y-1 text-slate-900">
-                            <div className="font-bold text-cyan-700 flex items-center space-x-1">
+                            <div className="font-bold text-zinc-900 flex items-center space-x-1">
                               <Hospital className="w-3.5 h-3.5" />
                               <span>{fac.name}</span>
                             </div>
@@ -528,6 +819,18 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                             {fac.address && <div className="text-[10px] text-slate-500">{fac.address}</div>}
                           </div>
                         </Popup>
+                        <LeafletTooltip
+                          direction="top"
+                          offset={[0, -7]}
+                          permanent={currentZoom >= 14}
+                          className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                        >
+                          {currentZoom >= 14 ? (
+                            <span>MEDICAL · {fac.name}</span>
+                          ) : (
+                            <span className="text-xs font-semibold">{fac.name}</span>
+                          )}
+                        </LeafletTooltip>
                       </CircleMarker>
                     ))}
 
@@ -575,10 +878,42 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                               )}
                             </div>
                           </Popup>
+                          <LeafletTooltip
+                            direction="top"
+                            offset={[0, -9]}
+                            permanent={currentZoom >= 14 || isSelected}
+                            className={currentZoom >= 14 ? 'tactical-tooltip' : undefined}
+                          >
+                            {currentZoom >= 14 ? (
+                              <span>{v.name} · {v.elevation_m}m · {v.status === 'CRITICALLY_ISOLATED' ? 'SEVERED' : v.status === 'POTENTIALLY_ISOLATED' ? 'WARNING' : 'SAFE'}</span>
+                            ) : (
+                              <span className="text-xs font-semibold">{v.name}</span>
+                            )}
+                          </LeafletTooltip>
                         </CircleMarker>
                       );
                     })}
                   </MapContainer>
+
+                  {/* Bottom-Right Live Cursor Telemetry Badge */}
+                  <div className="absolute bottom-3 right-4 z-[1000] flex items-center space-x-2 pointer-events-auto">
+                    <div className="bg-[#050505]/95 backdrop-blur-md border border-zinc-800 text-white font-mono text-[11px] px-3 py-1.5 rounded-lg shadow-xl flex items-center space-x-3">
+                      <span className="flex items-center space-x-1.5 text-zinc-300">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="text-zinc-500">LAT</span>
+                        <span className="text-white font-bold">{cursorCoords.lat.toFixed(4)}°N</span>
+                        <span className="text-zinc-700">|</span>
+                        <span className="text-zinc-500">LON</span>
+                        <span className="text-white font-bold">{cursorCoords.lon.toFixed(4)}°E</span>
+                      </span>
+                      <span className="text-zinc-700">|</span>
+                      <span className="text-zinc-400">ZOOM <b className="text-white">{currentZoom}</b></span>
+                      <span className="text-zinc-700">|</span>
+                      <span className="px-1.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-zinc-200 text-[10px] font-bold">
+                        {getGroundScaleText(currentZoom)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -586,10 +921,10 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
               {selectedVillage && (
                 <div className={`p-4 rounded-xl border transition-all ${
                   selectedVillage.status === 'CRITICALLY_ISOLATED'
-                    ? 'bg-rose-950/40 border-rose-800/80 text-rose-200'
+                    ? 'bg-rose-950/40 border-rose-800 text-rose-200'
                     : selectedVillage.status === 'POTENTIALLY_ISOLATED'
-                    ? 'bg-amber-950/40 border-amber-800/80 text-amber-200'
-                    : 'bg-emerald-950/40 border-emerald-800/80 text-emerald-200'
+                    ? 'bg-amber-950/40 border-amber-800 text-amber-200'
+                    : 'bg-emerald-950/40 border-emerald-800 text-emerald-200'
                 }`}>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center space-x-2.5">
@@ -627,15 +962,15 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       {selectedVillage.status !== 'CRITICALLY_ISOLATED' && (
                         <>
                           <div>
-                            <span className="text-[10px] uppercase text-slate-400 block">Baseline</span>
+                            <span className="text-[10px] uppercase text-zinc-400 block">Baseline</span>
                             <span>{selectedVillage.baseline_travel_time_min ?? '--'} min</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase text-slate-400 block">Post-Disaster</span>
+                            <span className="text-[10px] uppercase text-zinc-400 block">Post-Disaster</span>
                             <span className="font-bold">{selectedVillage.travel_time_min ?? '--'} min</span>
                           </div>
                           <div>
-                            <span className="text-[10px] uppercase text-slate-400 block">Detour Delay</span>
+                            <span className="text-[10px] uppercase text-zinc-400 block">Detour Delay</span>
                             <span className="text-amber-400 font-bold">+{selectedVillage.detour_delay_min ?? 0} min</span>
                           </div>
                         </>
@@ -644,33 +979,128 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Multi-Modal Pre-Disaster Rescue Routing Panel */}
+              {selectedVillage && (() => {
+                const mmPlan = multimodalPlan?.settlement_plans?.find(
+                  (p: SettlementMultiModalPlan) => String(p.osm_id) === String(selectedVillage.osm_id) || p.village_name.toLowerCase() === selectedVillage.name.toLowerCase()
+                );
+                if (!mmPlan) return null;
+
+                return (
+                  <div className="p-4 rounded-xl bg-[#111113] border border-zinc-800 shadow-lg space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-2.5">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+                        <span className="font-bold text-xs uppercase tracking-wider text-white">
+                          Pre-Disaster Multi-Modal Rescue Plan (Roadways, Railways & Airways)
+                        </span>
+                      </div>
+                      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                        mmPlan.operational_status === 'SEVERED'
+                          ? 'bg-red-950 text-red-300 border border-red-700'
+                          : mmPlan.operational_status === 'CLOSING_SOON'
+                          ? 'bg-amber-950 text-amber-300 border border-amber-700'
+                          : 'bg-emerald-950 text-emerald-300 border border-emerald-700'
+                      }`}>
+                        {mmPlan.urgency_badge}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+                      {/* 1. Roadway */}
+                      <div className="p-3 rounded-lg bg-black border border-zinc-800 space-y-1.5">
+                        <div className="font-bold text-white flex items-center space-x-1.5">
+                          <Truck className="w-3.5 h-3.5" />
+                          <span>1. Roadway Plan</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-300">
+                          <strong>Fastest Route:</strong> {mmPlan.roadway.fastest_pre_block.route_name}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 font-mono">
+                          {mmPlan.roadway.fastest_pre_block.distance_km} km • {mmPlan.roadway.fastest_pre_block.travel_time_min} mins
+                        </div>
+                        <div className="text-[11px] text-emerald-400 mt-1">
+                          <strong>Flood-Safe Bypass:</strong> {mmPlan.roadway.flood_safe_bypass.feasible ? 'Available (Ridge Path)' : 'No Bypass'}
+                        </div>
+                        <div className="text-[10px] text-zinc-500">
+                          {mmPlan.roadway.flood_safe_bypass.advisory}
+                        </div>
+                      </div>
+
+                      {/* 2. Railway */}
+                      <div className="p-3 rounded-lg bg-black border border-zinc-800 space-y-1.5">
+                        <div className="font-bold text-white flex items-center space-x-1.5">
+                          <Train className="w-3.5 h-3.5" />
+                          <span>2. Railway Railhead</span>
+                        </div>
+                        <div className="text-[11px] text-zinc-200 font-semibold">
+                          {mmPlan.railway.nearest_railhead}
+                        </div>
+                        <div className="text-[10px] text-zinc-400 font-mono">
+                          Road Feeder: {mmPlan.railway.road_feeder_distance_km} km ({mmPlan.railway.road_feeder_time_min} min)
+                        </div>
+                        <div className="text-[10px] text-zinc-300 bg-zinc-900 p-1.5 rounded border border-zinc-700">
+                          {mmPlan.railway.rail_evacuation_capacity}
+                        </div>
+                      </div>
+
+                      {/* 3. Airway */}
+                      <div className="p-3 rounded-lg bg-black border border-zinc-800 space-y-1.5">
+                        <div className="font-bold text-white flex items-center space-x-1.5">
+                          <Plane className="w-3.5 h-3.5" />
+                          <span>3. Airway Corridors</span>
+                        </div>
+                        {mmPlan.airway.pickup_hlz ? (
+                          <>
+                            <div className="text-[11px] text-zinc-200">
+                              <strong>Pickup HLZ:</strong> {mmPlan.airway.pickup_hlz.name}
+                            </div>
+                            <div className="text-[10px] text-zinc-400 font-mono">
+                              Ground Access: {mmPlan.airway.pickup_hlz.distance_km} km (~{mmPlan.airway.pickup_hlz.ground_access_time_min}m) • Slope: {mmPlan.airway.pickup_hlz.slope_deg}°
+                            </div>
+                            {mmPlan.airway.air_bridge && (
+                              <div className="text-[10px] text-zinc-300 bg-zinc-900 p-1.5 rounded border border-zinc-700">
+                                <strong>Sortie:</strong> {mmPlan.airway.air_bridge.estimated_flight_time_min} min flight to {mmPlan.airway.air_bridge.destination_airbase} (Bearing {mmPlan.airway.air_bridge.compass_bearing_deg}°)
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-[11px] text-zinc-400">No safe HLZ within radius.</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Right Side: Isolation Breakdown Chart & Filters */}
             <div className="space-y-4">
               {/* Chart Card */}
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
-                <span className="text-xs font-bold text-slate-200 block uppercase tracking-wider">
+              <div className="p-4 rounded-2xl bg-[#111113] border border-zinc-800 space-y-3">
+                <span className="text-xs font-bold text-white block uppercase tracking-wider">
                   Settlement Accessibility Distribution
                 </span>
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis type="number" stroke="#64748b" tick={{ fontSize: 10 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272A" />
+                      <XAxis type="number" stroke="#71717A" tick={{ fontSize: 10 }} />
                       <YAxis
                         dataKey="name"
                         type="category"
-                        stroke="#94a3b8"
+                        stroke="#71717A"
                         tick={{ fontSize: 9 }}
                         width={100}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#0f172a',
-                          borderColor: '#334155',
+                          backgroundColor: '#111113',
+                          borderColor: '#27272A',
                           borderRadius: '8px',
                           fontSize: '11px',
+                          color: '#FFFFFF',
                         }}
                       />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]}>
@@ -684,26 +1114,26 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
               </div>
 
               {/* Assumptions Collapsible Card */}
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-2xl bg-[#111113] border border-zinc-800 space-y-2">
                 <button
                   onClick={() => setShowAssumptions(!showAssumptions)}
-                  className="w-full flex items-center justify-between text-xs font-bold text-slate-200 cursor-pointer"
+                  className="w-full flex items-center justify-between text-xs font-bold text-white cursor-pointer"
                 >
                   <span className="flex items-center space-x-1.5">
-                    <HelpCircle className="w-4 h-4 text-cyan-400" />
+                    <HelpCircle className="w-4 h-4 text-zinc-300" />
                     <span>Active Exposure Rules & Assumptions</span>
                   </span>
                   {showAssumptions ? (
-                    <ChevronUp className="w-4 h-4 text-slate-400" />
+                    <ChevronUp className="w-4 h-4 text-zinc-400" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                    <ChevronDown className="w-4 h-4 text-zinc-400" />
                   )}
                 </button>
 
                 {showAssumptions && (
-                  <div className="pt-2 text-xs space-y-1.5 text-slate-300 border-t border-slate-800">
+                  <div className="pt-2 text-xs space-y-1.5 text-zinc-300 border-t border-zinc-800">
                     {analysisResult?.exposure_assumptions.map((asm, idx) => (
-                      <div key={idx} className="p-1.5 rounded bg-slate-950/70 border border-slate-800/60 text-[11px] leading-relaxed">
+                      <div key={idx} className="p-1.5 rounded bg-black border border-zinc-800 text-[11px] leading-relaxed">
                         {asm}
                       </div>
                     ))}
@@ -712,22 +1142,22 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
               </div>
 
               {/* Quick Facility Staging Card */}
-              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-2.5">
-                <span className="text-xs font-bold text-slate-200 block uppercase tracking-wider flex items-center space-x-1.5">
-                  <Hospital className="w-4 h-4 text-cyan-400" />
+              <div className="p-4 rounded-2xl bg-[#111113] border border-zinc-800 space-y-2.5">
+                <span className="text-xs font-bold text-white block uppercase tracking-wider flex items-center space-x-1.5">
+                  <Hospital className="w-4 h-4 text-zinc-300" />
                   <span>Nearest Relief Facilities ({facilities.length})</span>
                 </span>
                 <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                   {facilities.map((fac) => (
                     <div
                       key={fac.facility_id}
-                      className="p-2 rounded-lg bg-slate-950 border border-slate-800/80 flex items-center justify-between text-xs"
+                      className="p-2 rounded-lg bg-black border border-zinc-800 flex items-center justify-between text-xs"
                     >
                       <div>
-                        <div className="font-semibold text-slate-200 text-[11px]">{fac.name}</div>
-                        <div className="text-[10px] text-slate-400">{fac.emergency_level}</div>
+                        <div className="font-semibold text-white text-[11px]">{fac.name}</div>
+                        <div className="text-[10px] text-zinc-400">{fac.emergency_level}</div>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300 font-mono text-[10px] font-bold">
+                      <span className="px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-white font-mono text-[10px] font-bold">
                         {fac.capacity_beds} Beds
                       </span>
                     </div>
@@ -738,16 +1168,16 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </div>
 
           {/* Settlement Accessibility Data Table */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-white flex items-center space-x-2">
                   <span>Settlement Accessibility & Evacuation Routing</span>
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono">
+                  <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono border border-zinc-700">
                     {filteredVillages.length} Villages
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-zinc-400 mt-0.5">
                   Real OpenStreetMap settlements sorted by topological connectivity and detour penalty.
                 </p>
               </div>
@@ -755,20 +1185,20 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
               {/* Filters & Search */}
               <div className="flex items-center space-x-2">
                 <div className="relative">
-                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
+                  <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-400" />
                   <input
                     type="text"
                     placeholder="Search village name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-cyan-500 w-44"
+                    className="pl-8 pr-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-white w-44"
                   />
                 </div>
 
                 <select
                   value={filterLevel}
                   onChange={(e) => setFilterLevel(e.target.value)}
-                  className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-slate-200 text-xs focus:outline-none focus:border-cyan-500"
+                  className="px-2.5 py-1.5 rounded-lg bg-black border border-zinc-700 text-zinc-200 text-xs focus:outline-none focus:border-white"
                 >
                   <option value="ALL">All Statuses</option>
                   <option value="CRITICALLY_ISOLATED">Critically Isolated</option>
@@ -782,7 +1212,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="py-2.5 px-3">Village Name</th>
                     <th className="py-2.5 px-3">Type</th>
                     <th className="py-2.5 px-3">Population</th>
@@ -795,39 +1225,39 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                     <th className="py-2.5 px-3 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-zinc-800 font-mono">
                   {filteredVillages.map((v) => {
                     const isSelected = selectedVillage?.osm_id === v.osm_id;
                     return (
                       <tr
                         key={v.osm_id}
                         onClick={() => setSelectedVillage(v)}
-                        className={`hover:bg-slate-800/40 transition-colors cursor-pointer ${
-                          isSelected ? 'bg-cyan-950/30 border-l-2 border-cyan-400' : ''
+                        className={`hover:bg-zinc-800/40 transition-colors cursor-pointer ${
+                          isSelected ? 'bg-zinc-900 border-l-2 border-white' : ''
                         }`}
                       >
-                        <td className="py-2.5 px-3 font-sans font-semibold text-slate-200">
+                        <td className="py-2.5 px-3 font-sans font-semibold text-white">
                           {v.name}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400 capitalize">{v.place_type}</td>
-                        <td className="py-2.5 px-3 text-slate-300">
+                        <td className="py-2.5 px-3 text-zinc-400 capitalize">{v.place_type}</td>
+                        <td className="py-2.5 px-3 text-zinc-300">
                           {v.population ? v.population.toLocaleString() : '--'}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400">{v.elevation_m} m</td>
-                        <td className="py-2.5 px-3 font-sans text-slate-300">
+                        <td className="py-2.5 px-3 text-zinc-400">{v.elevation_m} m</td>
+                        <td className="py-2.5 px-3 font-sans text-zinc-300">
                           {v.nearest_facility_name || 'None Reachable'}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400">
+                        <td className="py-2.5 px-3 text-zinc-400">
                           {v.baseline_travel_time_min ? `${v.baseline_travel_time_min}m` : '--'}
                         </td>
-                        <td className="py-2.5 px-3 font-bold text-slate-200">
+                        <td className="py-2.5 px-3 font-bold text-white">
                           {v.travel_time_min ? `${v.travel_time_min}m` : '--'}
                         </td>
                         <td className="py-2.5 px-3">
                           {v.detour_delay_min && v.detour_delay_min > 0 ? (
                             <span className="text-amber-400 font-bold">+{v.detour_delay_min}m</span>
                           ) : (
-                            <span className="text-slate-500">0m</span>
+                            <span className="text-zinc-500">0m</span>
                           )}
                         </td>
                         <td className="py-2.5 px-3 font-sans">
@@ -849,7 +1279,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                               e.stopPropagation();
                               setSelectedVillage(v);
                             }}
-                            className="px-2 py-1 rounded bg-slate-800 hover:bg-cyan-900/60 hover:text-cyan-300 text-slate-300 text-[10px] font-sans font-semibold transition-all cursor-pointer"
+                            className="px-2 py-1 rounded bg-zinc-800 hover:bg-white hover:text-black text-zinc-300 text-[10px] font-sans font-semibold transition-all cursor-pointer"
                           >
                             Inspect Route
                           </button>
@@ -863,13 +1293,13 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
           </div>
 
           {/* Closed Road Breaches Table */}
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
             <div>
-              <h3 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
+              <h3 className="text-sm font-bold text-white flex items-center space-x-2">
                 <span className="w-2 h-2 rounded-full bg-rose-500" />
                 <span>Closed Road Breaches & Structural Severance ({analysisResult?.closed_road_segments_count ?? 0})</span>
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Road segments marked unavailable under current flood scenario and exposure rules.
               </p>
             </div>
@@ -877,7 +1307,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="py-2.5 px-3">Road Name</th>
                     <th className="py-2.5 px-3">Class</th>
                     <th className="py-2.5 px-3">Total Length</th>
@@ -887,23 +1317,23 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                     <th className="py-2.5 px-3">Structural Failure Mechanism</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-zinc-800 font-mono">
                   {analysisResult?.closed_road_segments.map((seg, idx) => (
-                    <tr key={`${seg.osm_id}-${idx}`} className="hover:bg-slate-800/40">
-                      <td className="py-2.5 px-3 font-sans font-semibold text-slate-200">
+                    <tr key={`${seg.osm_id}-${idx}`} className="hover:bg-zinc-800/40">
+                      <td className="py-2.5 px-3 font-sans font-semibold text-white">
                         {seg.name} {seg.is_trunk_artery && (
                           <span className="ml-1.5 px-1.5 py-0.2 rounded bg-rose-950 border border-rose-800 text-rose-300 text-[9px] font-bold">
                             TRUNK ARTERY
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 capitalize">{seg.highway}</td>
-                      <td className="py-2.5 px-3 text-slate-300">{seg.total_length_km} km</td>
+                      <td className="py-2.5 px-3 text-zinc-400 capitalize">{seg.highway}</td>
+                      <td className="py-2.5 px-3 text-zinc-300">{seg.total_length_km} km</td>
                       <td className="py-2.5 px-3 text-rose-400 font-bold">{seg.submerged_length_km} km</td>
-                      <td className="py-2.5 px-3 text-cyan-300">
+                      <td className="py-2.5 px-3 text-white">
                         {seg.estimated_water_depth_m ? `~${seg.estimated_water_depth_m}m` : '--'}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400">{seg.elevation_m} m</td>
+                      <td className="py-2.5 px-3 text-zinc-400">{seg.elevation_m} m</td>
                       <td className="py-2.5 px-3 font-sans text-rose-300 text-[11px]">
                         {seg.closure_reason}
                       </td>
@@ -919,23 +1349,23 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
       {/* TAB 2: CONFIGURABLE EXPOSURE RULES */}
       {activeTab === 'rules' && (
         <div className="space-y-6">
-          <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-6 max-w-4xl">
+          <div className="p-6 rounded-2xl bg-[#111113] border border-zinc-800 space-y-6 max-w-4xl">
             <div>
-              <h2 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                <Sliders className="w-5 h-5 text-cyan-400" />
+              <h2 className="text-base font-bold text-white flex items-center space-x-2">
+                <Sliders className="w-5 h-5 text-zinc-300" />
                 <span>Configurable Road Exposure & Destruction Rules</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-zinc-400 mt-1">
                 Calibrate engineering exposure rules rather than blindly assuming every road intersecting water is severed.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Critical Water Depth Slider */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-semibold text-slate-200">Critical Water Depth Threshold</label>
-                  <span className="font-mono text-cyan-400 font-bold">
+                  <label className="font-semibold text-white">Critical Water Depth Threshold</label>
+                  <span className="font-mono text-white font-bold">
                     {exposureParams.critical_water_depth_m?.toFixed(2)} m
                   </span>
                 </div>
@@ -951,18 +1381,18 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       critical_water_depth_m: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-white cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   Water depth at which standard emergency vehicles cannot cross due to engine air intake submersion and vehicle buoyancy.
                 </p>
               </div>
 
               {/* Bridge Deck Clearance Slider */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-semibold text-slate-200">Bridge Clearance Bonus</label>
-                  <span className="font-mono text-cyan-400 font-bold">
+                  <label className="font-semibold text-white">Bridge Clearance Bonus</label>
+                  <span className="font-mono text-white font-bold">
                     +{exposureParams.bridge_clearance_bonus_m?.toFixed(1)} m
                   </span>
                 </div>
@@ -978,18 +1408,18 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       bridge_clearance_bonus_m: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-white cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   High-level bridges (e.g. Coronation Bridge) clear flood waters and remain passable unless flood stage exceeds deck clearance.
                 </p>
               </div>
 
               {/* Min Submerged Length Slider */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-semibold text-slate-200">Min Submerged Length Tolerance</label>
-                  <span className="font-mono text-cyan-400 font-bold">
+                  <label className="font-semibold text-white">Min Submerged Length Tolerance</label>
+                  <span className="font-mono text-white font-bold">
                     {exposureParams.min_submerged_length_m?.toFixed(0)} m
                   </span>
                 </div>
@@ -1005,18 +1435,18 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       min_submerged_length_m: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-white cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   Fringe roadside clips below this contiguous length are treated as shallow edge puddles rather than road breaches.
                 </p>
               </div>
 
               {/* Steep Slope Hazard Slider */}
-              <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-xl bg-black border border-zinc-800 space-y-2">
                 <div className="flex justify-between items-center text-xs">
-                  <label className="font-semibold text-slate-200">Slope Landslide Risk Threshold</label>
-                  <span className="font-mono text-cyan-400 font-bold">
+                  <label className="font-semibold text-white">Slope Landslide Risk Threshold</label>
+                  <span className="font-mono text-white font-bold">
                     {exposureParams.slope_debris_hazard_degrees?.toFixed(0)}°
                   </span>
                 </div>
@@ -1032,22 +1462,22 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                       slope_debris_hazard_degrees: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full accent-cyan-500 cursor-pointer"
+                  className="w-full accent-white cursor-pointer"
                 />
-                <p className="text-[11px] text-slate-400 leading-relaxed">
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
                   Roads cut into steep mountain slopes exceeding this gradient face debris flows and rockfall collapses when undercut by water.
                 </p>
               </div>
             </div>
 
             {/* 4x4 High-Clearance Rescue Fleet Toggle */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+            <div className="p-4 rounded-xl bg-black border border-zinc-800 flex items-center justify-between">
               <div className="space-y-0.5">
-                <div className="text-xs font-bold text-slate-200 flex items-center space-x-2">
-                  <Truck className="w-4 h-4 text-cyan-400" />
+                <div className="text-xs font-bold text-white flex items-center space-x-2">
+                  <Truck className="w-4 h-4 text-zinc-300" />
                   <span>High-Clearance 4x4 Rescue Vehicle Fleet</span>
                 </div>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-[11px] text-zinc-400">
                   Enables heavy 4x4 rescue trucks capable of wading up to 0.60m depth with snorkel intake.
                 </p>
               </div>
@@ -1059,10 +1489,10 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                   })
                 }
                 className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors ${
-                  exposureParams.allow_4x4_high_clearance ? 'bg-cyan-600 justify-end' : 'bg-slate-800 justify-start'
+                  exposureParams.allow_4x4_high_clearance ? 'bg-white justify-end' : 'bg-zinc-800 justify-start'
                 }`}
               >
-                <div className="w-4 h-4 rounded-full bg-white shadow-md transform transition-transform" />
+                <div className="w-4 h-4 rounded-full bg-black shadow-md transform transition-transform" />
               </button>
             </div>
 
@@ -1070,7 +1500,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
               <button
                 onClick={handleRunAnalysis}
                 disabled={isAnalyzing}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white text-xs font-bold flex items-center space-x-2 shadow-lg cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-bold flex items-center space-x-2 shadow-md cursor-pointer transition"
               >
                 <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
                 <span>Apply Exposure Rules & Recalculate</span>
@@ -1083,13 +1513,13 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
       {/* TAB 3: EMERGENCY FACILITIES */}
       {activeTab === 'facilities' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+          <div className="p-5 rounded-2xl bg-[#111113] border border-zinc-800 space-y-4">
             <div>
-              <h2 className="text-sm font-bold text-slate-100 flex items-center space-x-2">
-                <Hospital className="w-4 h-4 text-cyan-400" />
+              <h2 className="text-sm font-bold text-white flex items-center space-x-2">
+                <Hospital className="w-4 h-4 text-zinc-300" />
                 <span>Verified Emergency Facilities & Disaster Staging Bases</span>
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-zinc-400 mt-0.5">
                 Real OpenStreetMap healthcare nodes mapped as destinations for shortest alternative detour routing.
               </p>
             </div>
@@ -1097,7 +1527,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400">
+                  <tr className="border-b border-zinc-800 text-[11px] uppercase tracking-wider text-zinc-400">
                     <th className="py-2.5 px-3">Facility Name</th>
                     <th className="py-2.5 px-3">Facility Type</th>
                     <th className="py-2.5 px-3">Tier / Emergency Level</th>
@@ -1107,15 +1537,15 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                     <th className="py-2.5 px-3">Location Coordinates</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-zinc-800 font-mono">
                   {facilities.map((fac) => (
-                    <tr key={fac.facility_id} className="hover:bg-slate-800/40">
-                      <td className="py-2.5 px-3 font-sans font-semibold text-slate-200">
+                    <tr key={fac.facility_id} className="hover:bg-zinc-800/40">
+                      <td className="py-2.5 px-3 font-sans font-semibold text-white">
                         {fac.name}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 capitalize">{fac.facility_type.replace('_', ' ')}</td>
-                      <td className="py-2.5 px-3 text-cyan-300 font-sans">{fac.emergency_level}</td>
-                      <td className="py-2.5 px-3 text-slate-200 font-bold">{fac.capacity_beds}</td>
+                      <td className="py-2.5 px-3 text-zinc-400 capitalize">{fac.facility_type.replace('_', ' ')}</td>
+                      <td className="py-2.5 px-3 text-zinc-300 font-sans">{fac.emergency_level}</td>
+                      <td className="py-2.5 px-3 text-white font-bold">{fac.capacity_beds}</td>
                       <td className="py-2.5 px-3 font-sans">
                         {fac.trauma_centre ? (
                           <span className="text-emerald-400 font-bold flex items-center space-x-1">
@@ -1123,7 +1553,7 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                             <span>Yes</span>
                           </span>
                         ) : (
-                          <span className="text-slate-500">No</span>
+                          <span className="text-zinc-500">No</span>
                         )}
                       </td>
                       <td className="py-2.5 px-3 font-sans">
@@ -1133,10 +1563,10 @@ export const VillageIsolationPage: React.FC<VillageIsolationPageProps> = ({
                             <span>Yes</span>
                           </span>
                         ) : (
-                          <span className="text-slate-500">No</span>
+                          <span className="text-zinc-500">No</span>
                         )}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400">
+                      <td className="py-2.5 px-3 text-zinc-400">
                         [{fac.longitude.toFixed(4)}, {fac.latitude.toFixed(4)}]
                       </td>
                     </tr>

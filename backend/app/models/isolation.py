@@ -1,6 +1,7 @@
 """
 Road Network Isolation and Emergency Accessibility Data Models
 Phase 4: Real Graph-Theoretic Road Inaccessibility & Detour Routing
+Phase 8: Multi-Modal Pre-Disaster Rescue Routing (Roadways, Railways & Airways)
 """
 
 from typing import Any, Dict, List, Literal, Optional, Union
@@ -131,3 +132,83 @@ class RoadIsolationAnalysisResult(BaseModel):
     closed_road_segments: List[ClosedRoadSegment]
     facilities: List[EmergencyFacility]
     geojson_export_url: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Multi-Modal Pre-Disaster Rescue Routing Models
+# ---------------------------------------------------------------------------
+
+class RoadwayRouteOption(BaseModel):
+    route_type: Literal["FASTEST_PRE_CLOSURE", "HIGH_GROUND_FLOOD_SAFE_BYPASS", "SHORTEST_BASELINE"]
+    feasible: bool
+    route_name: str
+    travel_time_min: float
+    distance_km: float
+    window_margin_hours: Optional[float] = None
+    path: List[List[float]] = Field(default_factory=list)
+    advisory: str
+
+class RoadwaySettlementPlan(BaseModel):
+    fastest_pre_block: RoadwayRouteOption
+    flood_safe_bypass: RoadwayRouteOption
+    baseline_shortest: RoadwayRouteOption
+
+class RailwaySettlementPlan(BaseModel):
+    nearest_railhead: str
+    station_code: str
+    station_coords: List[float]
+    road_feeder_distance_km: float
+    road_feeder_time_min: float
+    feeder_path: List[List[float]] = Field(default_factory=list)
+    feeder_status: str
+    rail_evacuation_capacity: str
+    is_station_safe: bool
+
+class AirwayPickupHLZ(BaseModel):
+    hlz_id: str
+    name: str
+    coords: List[float]
+    distance_km: float
+    ground_access_time_min: float
+    slope_deg: float
+    suitability_tier: str
+    elevation_m: float
+
+class AirwayAirBridge(BaseModel):
+    destination_airbase: str
+    destination_coords: List[float]
+    distance_km: float
+    compass_bearing_deg: float
+    compass_bearing_label: str
+    estimated_flight_time_min: float
+    vector_coords: List[List[float]] = Field(default_factory=list)
+    helicopter_types: str
+
+class AirwaySettlementPlan(BaseModel):
+    pickup_hlz: Optional[AirwayPickupHLZ] = None
+    air_bridge: Optional[AirwayAirBridge] = None
+
+class SettlementMultiModalPlan(BaseModel):
+    osm_id: Union[int, str]
+    village_name: str
+    population: int
+    coordinates: List[float]
+    elevation_m: float
+    operational_status: Literal["OPEN_SAFE", "CLOSING_SOON", "SEVERED"]
+    time_to_isolation_hours: Optional[float] = None
+    urgency_badge: str
+    urgency_color: Literal["emerald", "amber", "red"]
+    roadway: RoadwaySettlementPlan
+    railway: RailwaySettlementPlan
+    airway: AirwaySettlementPlan
+
+class MultiModalRescueResponse(BaseModel):
+    status: str
+    timestamp_utc: str
+    timestamp_ist: str
+    summary: Dict[str, Any]
+    roadway_network: Dict[str, Any]
+    railway_system: Dict[str, Any]
+    airway_system: Dict[str, Any]
+    settlement_plans: List[SettlementMultiModalPlan]
+    zero_fabrication_guarantee: bool = True

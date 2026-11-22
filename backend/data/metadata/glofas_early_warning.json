@@ -1,0 +1,681 @@
+{
+  "status": "success",
+  "is_live": true,
+  "timestamp": "2026-11-22T09:30:03.577073+00:00",
+  "source": "Copernicus GloFAS (Global Flood Awareness System) via Open-Meteo Flood API",
+  "overall_alert_tier": "NORMAL",
+  "overall_badge": {
+    "title": "ADVISORY NORMAL \u2014 DISCHARGE WITHIN SEASONAL CAPACITY",
+    "color": "emerald",
+    "description": "Current peak river discharge is 206.0 m\u00b3/s. Routine telemetry monitoring active."
+  },
+  "peak_forecast_discharge_m3s": 206.0,
+  "calculated_surge_rise_rate_m_per_hr": 0.053,
+  "stations": [
+    {
+      "station_id": "glofas_chungthang_inflow",
+      "station_name": "Chungthang Upstream Reach",
+      "role": "Upstream Alpine Inflow Gauge",
+      "latitude": 27.6,
+      "longitude": 88.65,
+      "current_discharge_m3s": 42.0,
+      "peak_forecast_m3s": 46.4,
+      "alert_tier": "NORMAL",
+      "badge_color": "emerald",
+      "advisory": "ADVISORY NORMAL: Discharge within seasonal hydraulic capacity (< 600 m\u00b3/s).",
+      "thresholds": {
+        "warning_m3s": 600.0,
+        "critical_m3s": 1500.0
+      },
+      "time_series": [
+        {
+          "date": "2026-11-15",
+          "discharge_m3s": 39.09,
+          "discharge_mean_m3s": 39.09,
+          "discharge_max_m3s": 39.09,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-16",
+          "discharge_m3s": 38.17,
+          "discharge_mean_m3s": 38.17,
+          "discharge_max_m3s": 38.17,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-17",
+          "discharge_m3s": 38.9,
+          "discharge_mean_m3s": 38.9,
+          "discharge_max_m3s": 38.9,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-18",
+          "discharge_m3s": 41.56,
+          "discharge_mean_m3s": 41.56,
+          "discharge_max_m3s": 41.56,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-19",
+          "discharge_m3s": 38.54,
+          "discharge_mean_m3s": 38.54,
+          "discharge_max_m3s": 38.54,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-20",
+          "discharge_m3s": 46.42,
+          "discharge_mean_m3s": 46.42,
+          "discharge_max_m3s": 46.42,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-21",
+          "discharge_m3s": 44.5,
+          "discharge_mean_m3s": 44.5,
+          "discharge_max_m3s": 44.5,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-22",
+          "discharge_m3s": 41.95,
+          "discharge_mean_m3s": 41.88,
+          "discharge_max_m3s": 41.95,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-23",
+          "discharge_m3s": 38.63,
+          "discharge_mean_m3s": 38.63,
+          "discharge_max_m3s": 38.63,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-24",
+          "discharge_m3s": 35.73,
+          "discharge_mean_m3s": 35.73,
+          "discharge_max_m3s": 35.73,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-25",
+          "discharge_m3s": 33.12,
+          "discharge_mean_m3s": 33.09,
+          "discharge_max_m3s": 33.28,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-26",
+          "discharge_m3s": 30.77,
+          "discharge_mean_m3s": 30.73,
+          "discharge_max_m3s": 30.92,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-27",
+          "discharge_m3s": 28.65,
+          "discharge_mean_m3s": 28.61,
+          "discharge_max_m3s": 28.72,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-28",
+          "discharge_m3s": 26.67,
+          "discharge_mean_m3s": 26.7,
+          "discharge_max_m3s": 26.8,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-29",
+          "discharge_m3s": 25.0,
+          "discharge_mean_m3s": 24.98,
+          "discharge_max_m3s": 25.12,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-30",
+          "discharge_m3s": 23.43,
+          "discharge_mean_m3s": 23.42,
+          "discharge_max_m3s": 23.55,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-01",
+          "discharge_m3s": 22.01,
+          "discharge_mean_m3s": 22.0,
+          "discharge_max_m3s": 22.23,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-02",
+          "discharge_m3s": 20.73,
+          "discharge_mean_m3s": 20.74,
+          "discharge_max_m3s": 21.08,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-03",
+          "discharge_m3s": 19.56,
+          "discharge_mean_m3s": 19.58,
+          "discharge_max_m3s": 19.94,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-04",
+          "discharge_m3s": 18.54,
+          "discharge_mean_m3s": 18.55,
+          "discharge_max_m3s": 18.86,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-05",
+          "discharge_m3s": 17.58,
+          "discharge_mean_m3s": 17.63,
+          "discharge_max_m3s": 18.05,
+          "is_forecast": true
+        }
+      ]
+    },
+    {
+      "station_id": "glofas_teesta_bazar",
+      "station_name": "Teesta Bazar Gorge Gauge",
+      "role": "Central Flood Risk Hydrometric Point",
+      "latitude": 27.07,
+      "longitude": 88.43,
+      "current_discharge_m3s": 136.7,
+      "peak_forecast_m3s": 156.0,
+      "alert_tier": "NORMAL",
+      "badge_color": "emerald",
+      "advisory": "ADVISORY NORMAL: Discharge within seasonal hydraulic capacity (< 600 m\u00b3/s).",
+      "thresholds": {
+        "warning_m3s": 600.0,
+        "critical_m3s": 1500.0
+      },
+      "time_series": [
+        {
+          "date": "2026-11-15",
+          "discharge_m3s": 113.29,
+          "discharge_mean_m3s": 113.29,
+          "discharge_max_m3s": 113.29,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-16",
+          "discharge_m3s": 120.9,
+          "discharge_mean_m3s": 120.14,
+          "discharge_max_m3s": 126.35,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-17",
+          "discharge_m3s": 132.97,
+          "discharge_mean_m3s": 133.07,
+          "discharge_max_m3s": 137.68,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-18",
+          "discharge_m3s": 137.04,
+          "discharge_mean_m3s": 137.04,
+          "discharge_max_m3s": 137.04,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-19",
+          "discharge_m3s": 128.12,
+          "discharge_mean_m3s": 128.12,
+          "discharge_max_m3s": 128.12,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-20",
+          "discharge_m3s": 156.04,
+          "discharge_mean_m3s": 156.04,
+          "discharge_max_m3s": 156.04,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-21",
+          "discharge_m3s": 146.91,
+          "discharge_mean_m3s": 146.91,
+          "discharge_max_m3s": 146.91,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-22",
+          "discharge_m3s": 136.72,
+          "discharge_mean_m3s": 136.72,
+          "discharge_max_m3s": 136.72,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-23",
+          "discharge_m3s": 124.03,
+          "discharge_mean_m3s": 124.05,
+          "discharge_max_m3s": 124.31,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-24",
+          "discharge_m3s": 112.76,
+          "discharge_mean_m3s": 112.83,
+          "discharge_max_m3s": 113.02,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-25",
+          "discharge_m3s": 103.71,
+          "discharge_mean_m3s": 103.44,
+          "discharge_max_m3s": 104.68,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-26",
+          "discharge_m3s": 94.94,
+          "discharge_mean_m3s": 94.71,
+          "discharge_max_m3s": 96.27,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-27",
+          "discharge_m3s": 86.9,
+          "discharge_mean_m3s": 86.72,
+          "discharge_max_m3s": 88.13,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-28",
+          "discharge_m3s": 79.72,
+          "discharge_mean_m3s": 79.57,
+          "discharge_max_m3s": 80.85,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-29",
+          "discharge_m3s": 73.3,
+          "discharge_mean_m3s": 73.25,
+          "discharge_max_m3s": 74.51,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-30",
+          "discharge_m3s": 67.71,
+          "discharge_mean_m3s": 67.64,
+          "discharge_max_m3s": 68.82,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-01",
+          "discharge_m3s": 62.53,
+          "discharge_mean_m3s": 62.54,
+          "discharge_max_m3s": 63.57,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-02",
+          "discharge_m3s": 57.88,
+          "discharge_mean_m3s": 58.07,
+          "discharge_max_m3s": 62.53,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-03",
+          "discharge_m3s": 53.83,
+          "discharge_mean_m3s": 54.03,
+          "discharge_max_m3s": 59.67,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-04",
+          "discharge_m3s": 50.17,
+          "discharge_mean_m3s": 50.46,
+          "discharge_max_m3s": 55.75,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-05",
+          "discharge_m3s": 46.86,
+          "discharge_mean_m3s": 47.38,
+          "discharge_max_m3s": 53.2,
+          "is_forecast": true
+        }
+      ]
+    },
+    {
+      "station_id": "glofas_mekhliganj_outflow",
+      "station_name": "Sevoke / Jalpaiguri Floodplain Reach",
+      "role": "Downstream Floodplain Gauge",
+      "latitude": 26.65,
+      "longitude": 88.55,
+      "current_discharge_m3s": 177.2,
+      "peak_forecast_m3s": 206.0,
+      "alert_tier": "NORMAL",
+      "badge_color": "emerald",
+      "advisory": "ADVISORY NORMAL: Discharge within seasonal hydraulic capacity (< 800 m\u00b3/s).",
+      "thresholds": {
+        "warning_m3s": 800.0,
+        "critical_m3s": 1800.0
+      },
+      "time_series": [
+        {
+          "date": "2026-11-15",
+          "discharge_m3s": 156.4,
+          "discharge_mean_m3s": 156.4,
+          "discharge_max_m3s": 156.4,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-16",
+          "discharge_m3s": 162.31,
+          "discharge_mean_m3s": 160.96,
+          "discharge_max_m3s": 166.11,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-17",
+          "discharge_m3s": 178.89,
+          "discharge_mean_m3s": 177.38,
+          "discharge_max_m3s": 181.81,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-18",
+          "discharge_m3s": 189.11,
+          "discharge_mean_m3s": 189.11,
+          "discharge_max_m3s": 189.11,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-19",
+          "discharge_m3s": 181.81,
+          "discharge_mean_m3s": 181.81,
+          "discharge_max_m3s": 181.81,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-20",
+          "discharge_m3s": 206.01,
+          "discharge_mean_m3s": 205.79,
+          "discharge_max_m3s": 206.01,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-21",
+          "discharge_m3s": 191.75,
+          "discharge_mean_m3s": 191.81,
+          "discharge_max_m3s": 192.2,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-22",
+          "discharge_m3s": 177.24,
+          "discharge_mean_m3s": 177.24,
+          "discharge_max_m3s": 177.24,
+          "is_forecast": false
+        },
+        {
+          "date": "2026-11-23",
+          "discharge_m3s": 160.81,
+          "discharge_mean_m3s": 160.83,
+          "discharge_max_m3s": 161.18,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-24",
+          "discharge_m3s": 146.23,
+          "discharge_mean_m3s": 146.27,
+          "discharge_max_m3s": 146.57,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-25",
+          "discharge_m3s": 134.21,
+          "discharge_mean_m3s": 134.14,
+          "discharge_max_m3s": 135.14,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-26",
+          "discharge_m3s": 123.45,
+          "discharge_mean_m3s": 123.13,
+          "discharge_max_m3s": 124.89,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-27",
+          "discharge_m3s": 113.02,
+          "discharge_mean_m3s": 112.77,
+          "discharge_max_m3s": 114.61,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-28",
+          "discharge_m3s": 103.47,
+          "discharge_mean_m3s": 103.52,
+          "discharge_max_m3s": 105.17,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-29",
+          "discharge_m3s": 95.38,
+          "discharge_mean_m3s": 95.39,
+          "discharge_max_m3s": 97.17,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-11-30",
+          "discharge_m3s": 88.13,
+          "discharge_mean_m3s": 88.22,
+          "discharge_max_m3s": 89.78,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-01",
+          "discharge_m3s": 81.79,
+          "discharge_mean_m3s": 81.83,
+          "discharge_max_m3s": 83.33,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-02",
+          "discharge_m3s": 75.91,
+          "discharge_mean_m3s": 76.18,
+          "discharge_max_m3s": 81.04,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-03",
+          "discharge_m3s": 70.78,
+          "discharge_mean_m3s": 71.22,
+          "discharge_max_m3s": 78.98,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-04",
+          "discharge_m3s": 66.3,
+          "discharge_mean_m3s": 66.77,
+          "discharge_max_m3s": 74.34,
+          "is_forecast": true
+        },
+        {
+          "date": "2026-12-05",
+          "discharge_m3s": 62.24,
+          "discharge_mean_m3s": 62.91,
+          "discharge_max_m3s": 69.96,
+          "is_forecast": true
+        }
+      ]
+    }
+  ],
+  "timeline": [
+    {
+      "date": "2026-11-15",
+      "upstream_m3s": 39.1,
+      "mid_corridor_m3s": 113.3,
+      "downstream_m3s": 156.4,
+      "ensemble_max_m3s": 156.4,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-16",
+      "upstream_m3s": 38.2,
+      "mid_corridor_m3s": 120.9,
+      "downstream_m3s": 162.3,
+      "ensemble_max_m3s": 166.1,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-17",
+      "upstream_m3s": 38.9,
+      "mid_corridor_m3s": 133.0,
+      "downstream_m3s": 178.9,
+      "ensemble_max_m3s": 181.8,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-18",
+      "upstream_m3s": 41.6,
+      "mid_corridor_m3s": 137.0,
+      "downstream_m3s": 189.1,
+      "ensemble_max_m3s": 189.1,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-19",
+      "upstream_m3s": 38.5,
+      "mid_corridor_m3s": 128.1,
+      "downstream_m3s": 181.8,
+      "ensemble_max_m3s": 181.8,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-20",
+      "upstream_m3s": 46.4,
+      "mid_corridor_m3s": 156.0,
+      "downstream_m3s": 206.0,
+      "ensemble_max_m3s": 206.0,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-21",
+      "upstream_m3s": 44.5,
+      "mid_corridor_m3s": 146.9,
+      "downstream_m3s": 191.8,
+      "ensemble_max_m3s": 192.2,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-22",
+      "upstream_m3s": 42.0,
+      "mid_corridor_m3s": 136.7,
+      "downstream_m3s": 177.2,
+      "ensemble_max_m3s": 177.2,
+      "is_forecast": false
+    },
+    {
+      "date": "2026-11-23",
+      "upstream_m3s": 38.6,
+      "mid_corridor_m3s": 124.0,
+      "downstream_m3s": 160.8,
+      "ensemble_max_m3s": 161.2,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-24",
+      "upstream_m3s": 35.7,
+      "mid_corridor_m3s": 112.8,
+      "downstream_m3s": 146.2,
+      "ensemble_max_m3s": 146.6,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-25",
+      "upstream_m3s": 33.1,
+      "mid_corridor_m3s": 103.7,
+      "downstream_m3s": 134.2,
+      "ensemble_max_m3s": 135.1,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-26",
+      "upstream_m3s": 30.8,
+      "mid_corridor_m3s": 94.9,
+      "downstream_m3s": 123.5,
+      "ensemble_max_m3s": 124.9,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-27",
+      "upstream_m3s": 28.6,
+      "mid_corridor_m3s": 86.9,
+      "downstream_m3s": 113.0,
+      "ensemble_max_m3s": 114.6,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-28",
+      "upstream_m3s": 26.7,
+      "mid_corridor_m3s": 79.7,
+      "downstream_m3s": 103.5,
+      "ensemble_max_m3s": 105.2,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-29",
+      "upstream_m3s": 25.0,
+      "mid_corridor_m3s": 73.3,
+      "downstream_m3s": 95.4,
+      "ensemble_max_m3s": 97.2,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-11-30",
+      "upstream_m3s": 23.4,
+      "mid_corridor_m3s": 67.7,
+      "downstream_m3s": 88.1,
+      "ensemble_max_m3s": 89.8,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-12-01",
+      "upstream_m3s": 22.0,
+      "mid_corridor_m3s": 62.5,
+      "downstream_m3s": 81.8,
+      "ensemble_max_m3s": 83.3,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-12-02",
+      "upstream_m3s": 20.7,
+      "mid_corridor_m3s": 57.9,
+      "downstream_m3s": 75.9,
+      "ensemble_max_m3s": 81.0,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-12-03",
+      "upstream_m3s": 19.6,
+      "mid_corridor_m3s": 53.8,
+      "downstream_m3s": 70.8,
+      "ensemble_max_m3s": 79.0,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-12-04",
+      "upstream_m3s": 18.5,
+      "mid_corridor_m3s": 50.2,
+      "downstream_m3s": 66.3,
+      "ensemble_max_m3s": 74.3,
+      "is_forecast": true
+    },
+    {
+      "date": "2026-12-05",
+      "upstream_m3s": 17.6,
+      "mid_corridor_m3s": 46.9,
+      "downstream_m3s": 62.2,
+      "ensemble_max_m3s": 70.0,
+      "is_forecast": true
+    }
+  ]
+}

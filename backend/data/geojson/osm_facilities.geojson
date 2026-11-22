@@ -3,127 +3,553 @@
   "metadata": {
     "source": "OpenStreetMap Real Healthcare & Emergency Facilities",
     "region": "Teesta River Corridor, North Bengal & Sikkim",
-    "attribution": "© OpenStreetMap contributors (ODbL)"
+    "attribution": "\u00a9 OpenStreetMap contributors (ODbL)"
   },
   "features": [
     {
       "type": "Feature",
-      "id": "node/osm_facility_kalimpong_dh",
+      "id": "node/7062373773",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.4735, 27.0664]
+        "coordinates": [
+          88.47238,
+          27.07118
+        ]
       },
       "properties": {
-        "facility_id": "fac_kalimpong_dh",
-        "name": "Kalimpong District Hospital",
-        "facility_type": "district_hospital",
-        "emergency_level": "Tier 2 District Secondary & Surgical",
-        "capacity_beds": 250,
-        "icu_available": true,
-        "trauma_centre": true,
-        "elevation_m": 1240.0,
-        "address": "Ring King Pong Road, Kalimpong",
-        "source": "OpenStreetMap Real Healthcare Node"
+        "osm_id": 7062373773,
+        "osm_type": "node",
+        "name": "Adarsha Nursing Home, Kalimdong",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": null,
+        "source": "OpenStreetMap"
       }
     },
     {
       "type": "Feature",
-      "id": "node/osm_facility_sevoke_phc",
+      "id": "node/7065473741",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.4725, 26.8812]
+        "coordinates": [
+          88.47661,
+          27.07338
+        ]
       },
       "properties": {
-        "facility_id": "fac_sevoke_phc",
-        "name": "Sevoke Primary Health Sub-Centre",
-        "facility_type": "primary_health_centre",
-        "emergency_level": "Tier 3 Rural First-Aid & Triage",
-        "capacity_beds": 20,
-        "icu_available": false,
-        "trauma_centre": false,
-        "elevation_m": 165.0,
-        "address": "NH10 Corridor, Sevoke Village",
-        "source": "OpenStreetMap Real Healthcare Node"
+        "osm_id": 7065473741,
+        "osm_type": "node",
+        "name": "Seva Sadan Hospital, Darjeeling",
+        "amenity": "hospital",
+        "operator": null,
+        "emergency": null,
+        "healthcare": null,
+        "source": "OpenStreetMap"
       }
     },
     {
       "type": "Feature",
-      "id": "node/osm_facility_oodlabari_rh",
+      "id": "node/7199769048",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.5814, 26.8521]
+        "coordinates": [
+          88.42468,
+          27.0662
+        ]
       },
       "properties": {
-        "facility_id": "fac_oodlabari_rh",
-        "name": "Oodlabari Rural Hospital (BPHC)",
-        "facility_type": "rural_hospital",
-        "emergency_level": "Tier 3 Block Primary & Emergency",
-        "capacity_beds": 60,
-        "icu_available": false,
-        "trauma_centre": false,
-        "elevation_m": 178.0,
-        "address": "NH17/NH31, Oodlabari, Jalpaiguri",
-        "source": "OpenStreetMap Real Healthcare Node"
+        "osm_id": 7199769048,
+        "osm_type": "node",
+        "name": "PHC, Teesta Bazar",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
       }
     },
     {
       "type": "Feature",
-      "id": "node/osm_facility_mongpu_phc",
+      "id": "node/7199769480",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.3842, 26.9654]
+        "coordinates": [
+          88.35903,
+          27.03731
+        ]
       },
       "properties": {
-        "facility_id": "fac_mongpu_phc",
-        "name": "Mongpu Primary Health Centre",
-        "facility_type": "primary_health_centre",
-        "emergency_level": "Tier 3 Hill Block Clinic & Triage",
-        "capacity_beds": 35,
-        "icu_available": false,
-        "trauma_centre": false,
-        "elevation_m": 1150.0,
-        "address": "Mongpu Cinchona Plantation Area",
-        "source": "OpenStreetMap Real Healthcare Node"
+        "osm_id": 7199769480,
+        "osm_type": "node",
+        "name": "Takda BPHC",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
       }
     },
     {
       "type": "Feature",
-      "id": "node/osm_facility_teesta_relief_base",
+      "id": "node/7199769777",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.4680, 26.9050]
+        "coordinates": [
+          88.58586,
+          27.11691
+        ]
       },
       "properties": {
-        "facility_id": "fac_teesta_relief_base",
-        "name": "Teesta Valley Emergency Relief Staging Camp (NDRF / SSB)",
-        "facility_type": "relief_camp",
-        "emergency_level": "Disaster Relief Staging & Evacuation Base",
-        "capacity_beds": 500,
-        "icu_available": false,
-        "trauma_centre": true,
-        "elevation_m": 210.0,
-        "address": "Teesta Valley West Bank Staging Area",
-        "source": "Disaster Management & NDRF Staging Post"
+        "osm_id": 7199769777,
+        "osm_type": "node",
+        "name": "PHC, Algarah",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
       }
     },
     {
       "type": "Feature",
-      "id": "node/osm_facility_nbmch_apex",
+      "id": "node/7199770236",
       "geometry": {
         "type": "Point",
-        "coordinates": [88.3776, 26.8180]
+        "coordinates": [
+          88.62608,
+          26.86429
+        ]
       },
       "properties": {
-        "facility_id": "fac_nbmch_apex",
-        "name": "North Bengal Medical College & Hospital (Apex Referral)",
-        "facility_type": "tertiary_referral_hospital",
-        "emergency_level": "Tier 1 Apex Tertiary Trauma & Critical Care",
-        "capacity_beds": 850,
-        "icu_available": true,
-        "trauma_centre": true,
-        "elevation_m": 132.0,
-        "address": "Sushrutanagar / Siliguri Corridor",
-        "source": "OpenStreetMap Real Healthcare Node"
+        "osm_id": 7199770236,
+        "osm_type": "node",
+        "name": "Oodlabari BPHC",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7199770810",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.59744,
+          27.05083
+        ]
+      },
+      "properties": {
+        "osm_id": 7199770810,
+        "osm_type": "node",
+        "name": "PHC, Gitdubling",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7199771817",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.49623,
+          26.98232
+        ]
+      },
+      "properties": {
+        "osm_id": 7199771817,
+        "osm_type": "node",
+        "name": "PHC, Samthar",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7199771880",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.41779,
+          26.984
+        ]
+      },
+      "properties": {
+        "osm_id": 7199771880,
+        "osm_type": "node",
+        "name": "Rambi BPHC",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7199772012",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.40808,
+          27.04873
+        ]
+      },
+      "properties": {
+        "osm_id": 7199772012,
+        "osm_type": "node",
+        "name": "PHC, Takling",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/7666886991",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.40645,
+          26.91237
+        ]
+      },
+      "properties": {
+        "osm_id": 7666886991,
+        "osm_type": "node",
+        "name": "Latpanchar Hospital",
+        "amenity": "hospital",
+        "operator": null,
+        "emergency": null,
+        "healthcare": null,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8076704012",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.36478,
+          26.96
+        ]
+      },
+      "properties": {
+        "osm_id": 8076704012,
+        "osm_type": "node",
+        "name": "SubCentre, Labtah",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8077335822",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.60399,
+          27.13205
+        ]
+      },
+      "properties": {
+        "osm_id": 8077335822,
+        "osm_type": "node",
+        "name": "SubCentre, N. Sakyong",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8079726268",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.48307,
+          27.08379
+        ]
+      },
+      "properties": {
+        "osm_id": 8079726268,
+        "osm_type": "node",
+        "name": "SubCentre, Ch Bhalukhop",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8079774251",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.60269,
+          27.11183
+        ]
+      },
+      "properties": {
+        "osm_id": 8079774251,
+        "osm_type": "node",
+        "name": "Government Dispensary, Tandrabong",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8079998622",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.35801,
+          27.01305
+        ]
+      },
+      "properties": {
+        "osm_id": 8079998622,
+        "osm_type": "node",
+        "name": "SubCentre, Namring",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8080159182",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.36343,
+          26.97385
+        ]
+      },
+      "properties": {
+        "osm_id": 8080159182,
+        "osm_type": "node",
+        "name": "SubCentre, Reshep bazar",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8080220677",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.48107,
+          27.07194
+        ]
+      },
+      "properties": {
+        "osm_id": 8080220677,
+        "osm_type": "node",
+        "name": "SubCentre, Dungra",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8083686927",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.47745,
+          27.05719
+        ]
+      },
+      "properties": {
+        "osm_id": 8083686927,
+        "osm_type": "node",
+        "name": "SubCentre, Bong",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193164252",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.36668,
+          27.11819
+        ]
+      },
+      "properties": {
+        "osm_id": 8193164252,
+        "osm_type": "node",
+        "name": "SubCentre, Rong",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193211992",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.42534,
+          27.11937
+        ]
+      },
+      "properties": {
+        "osm_id": 8193211992,
+        "osm_type": "node",
+        "name": "SubCentre, Sadam",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193291365",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.45907,
+          27.09123
+        ]
+      },
+      "properties": {
+        "osm_id": 8193291365,
+        "osm_type": "node",
+        "name": "Primary Health Centre, Melli",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193453998",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.4294,
+          27.0992
+        ]
+      },
+      "properties": {
+        "osm_id": 8193453998,
+        "osm_type": "node",
+        "name": "SubCentre, Melli Dara",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193541016",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.43599,
+          27.14018
+        ]
+      },
+      "properties": {
+        "osm_id": 8193541016,
+        "osm_type": "node",
+        "name": "SubCentre, Rateypani",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/8193603610",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.46607,
+          27.1364
+        ]
+      },
+      "properties": {
+        "osm_id": 8193603610,
+        "osm_type": "node",
+        "name": "SubCentre, Kateng-Bokrang",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/1266541535",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.40775,
+          27.10745
+        ]
+      },
+      "properties": {
+        "osm_id": 1266541535,
+        "osm_type": "way",
+        "name": "SubCentre, Turuk",
+        "amenity": "clinic",
+        "operator": null,
+        "emergency": null,
+        "healthcare": "centre",
+        "source": "OpenStreetMap"
       }
     }
   ]

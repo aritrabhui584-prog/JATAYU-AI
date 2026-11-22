@@ -98,3 +98,29 @@ def export_priorities_csv(run_id: Optional[str] = Query(None)):
         media_type="text/csv",
         filename=f"jatayu_emergency_priorities_{target_id}.csv",
     )
+
+
+@router.get("/export/sitrep.pdf")
+def export_sitrep_pdf(run_id: Optional[str] = Query(None)):
+    """
+    Exports official NDMA / SDMA Emergency Situation Report (SITREP) PDF.
+    Contains operational command headers, live KPIs, top 5 prioritized settlements,
+    corridor severance breaches, and multi-source satellite citations.
+    """
+    from app.services.pdf_service import generate_sitrep_pdf
+
+    latest = priority_engine.get_latest_result()
+    if latest is None:
+        latest = priority_engine.rank_settlements(PriorityRankingParams())
+
+    target_id = run_id or latest.id
+    pdf_path = DATA_DIR / f"jatayu_sitrep_{target_id}.pdf"
+
+    if not pdf_path.exists():
+        generate_sitrep_pdf(pdf_path, latest)
+
+    return FileResponse(
+        path=str(pdf_path),
+        media_type="application/pdf",
+        filename=f"JATAYU_AI_SITREP_{target_id}.pdf",
+    )

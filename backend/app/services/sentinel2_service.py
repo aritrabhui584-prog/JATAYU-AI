@@ -186,4 +186,15 @@ class Sentinel2Service(BaseDataService):
             "state": IngestionState.AVAILABLE.value
         }
 
+    def ingest_authentic_s2_scene(self) -> Path:
+        """
+        Downloads and clips authentic low-cloud Sentinel-2 L2A 4-band GeoTIFF
+        from Microsoft Planetary Computer STAC for the Teesta Basin corridor.
+        """
+        import sys
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+        from ingest_s2_live import fetch_and_clip_sentinel2, OPTICAL_DIR, SCENE_METADATA
+        fetch_and_clip_sentinel2()
+        return OPTICAL_DIR / SCENE_METADATA["filename"]
+
 sentinel2_service = Sentinel2Service()

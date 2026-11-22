@@ -202,6 +202,7 @@ export interface RasterSceneRecord {
   resolution_m?: number;
   geotiff_path?: string;
   thumbnail_url?: string;
+  has_local_raster?: boolean;
   assets?: Record<string, any>;
   metadata?: Record<string, any>;
 }
@@ -653,6 +654,416 @@ export interface UnifiedSystemOverview {
   scientific_disclaimer: string;
   export_links: Record<string, string>;
 }
+
+// --- Helicopter Landing Zones (HLZ) ---
+
+export interface HLZProperties {
+  hlz_id: string;
+  name: string;
+  elevation_m: number;
+  slope_degrees: number;
+  nearest_settlement: string;
+  distance_to_settlement_km: number;
+  clearance_footprint_m: number;
+  clearance_area_sqm: number;
+  suitability_score: number;
+  suitability_tier: string;
+  operational_status: string;
+  latitude: number;
+  longitude: number;
+}
+
+export interface HLZFeature {
+  type: 'Feature';
+  id: string;
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number]; // [lon, lat]
+  };
+  properties: HLZProperties;
+}
+
+export interface HLZFeatureCollection {
+  type: 'FeatureCollection';
+  metadata: {
+    generated_at: string;
+    total_candidate_zones: number;
+    criteria: Record<string, any>;
+  };
+  features: HLZFeature[];
+}
+
+// --- GloFAS Early-Warning Telemetry ---
+
+export interface GloFASEarlyWarningPoint {
+  date: string;
+  discharge_m3s: number;
+  discharge_mean_m3s: number;
+  discharge_max_m3s: number;
+  is_forecast: boolean;
+}
+
+export interface GloFASMonitoringStation {
+  station_id: string;
+  station_name: string;
+  role: string;
+  latitude: number;
+  longitude: number;
+  current_discharge_m3s: number;
+  peak_forecast_m3s: number;
+  alert_tier: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  badge_color: 'emerald' | 'amber' | 'red';
+  advisory: string;
+  thresholds: {
+    normal_max: number;
+    warning_max: number;
+    critical_min: number;
+  };
+  time_series: GloFASEarlyWarningPoint[];
+}
+
+export interface GloFASTimelinePoint {
+  date: string;
+  upstream_m3s: number;
+  mid_corridor_m3s: number;
+  downstream_m3s: number;
+  ensemble_max_m3s: number;
+  is_forecast: boolean;
+}
+
+export interface GloFASEarlyWarningResponse {
+  status: string;
+  is_live: boolean;
+  timestamp: string;
+  source: string;
+  overall_alert_tier: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  overall_badge: {
+    title: string;
+    color: 'emerald' | 'amber' | 'red';
+    description: string;
+  };
+  peak_forecast_discharge_m3s: number;
+  stations: GloFASMonitoringStation[];
+  timeline?: GloFASTimelinePoint[];
+  offline_notice?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Pre-Disaster Multi-Modal Rescue Routing Types (Roadway, Railway & Airway)
+// ---------------------------------------------------------------------------
+
+export interface RoadwayRouteOption {
+  route_type: 'FASTEST_PRE_CLOSURE' | 'HIGH_GROUND_FLOOD_SAFE_BYPASS' | 'SHORTEST_BASELINE';
+  feasible: boolean;
+  route_name: string;
+  travel_time_min: number;
+  distance_km: number;
+  window_margin_hours?: number;
+  path: [number, number][]; // [lon, lat]
+  advisory: string;
+}
+
+export interface RoadwaySettlementPlan {
+  fastest_pre_block: RoadwayRouteOption;
+  flood_safe_bypass: RoadwayRouteOption;
+  baseline_shortest: RoadwayRouteOption;
+}
+
+export interface RailwaySettlementPlan {
+  nearest_railhead: string;
+  station_code: string;
+  station_coords: [number, number];
+  road_feeder_distance_km: number;
+  road_feeder_time_min: number;
+  feeder_path: [number, number][];
+  feeder_status: string;
+  rail_evacuation_capacity: string;
+  is_station_safe: boolean;
+}
+
+export interface AirwayPickupHLZ {
+  hlz_id: string;
+  name: string;
+  coords: [number, number];
+  distance_km: number;
+  ground_access_time_min: number;
+  slope_deg: number;
+  suitability_tier: string;
+  elevation_m: number;
+}
+
+export interface AirwayAirBridge {
+  destination_airbase: string;
+  destination_coords: [number, number];
+  distance_km: number;
+  compass_bearing_deg: number;
+  compass_bearing_label: string;
+  estimated_flight_time_min: number;
+  vector_coords: [[number, number], [number, number]];
+  helicopter_types: string;
+}
+
+export interface AirwaySettlementPlan {
+  pickup_hlz?: AirwayPickupHLZ;
+  air_bridge?: AirwayAirBridge;
+}
+
+export interface SettlementMultiModalPlan {
+  osm_id: number | string;
+  village_name: string;
+  population: number;
+  coordinates: [number, number];
+  elevation_m: number;
+  operational_status: 'OPEN_SAFE' | 'CLOSING_SOON' | 'SEVERED';
+  time_to_isolation_hours?: number;
+  urgency_badge: string;
+  urgency_color: 'emerald' | 'amber' | 'red';
+  roadway: RoadwaySettlementPlan;
+  railway: RailwaySettlementPlan;
+  airway: AirwaySettlementPlan;
+}
+
+export interface MultiModalRescueResponse {
+  status: string;
+  timestamp_utc: string;
+  timestamp_ist: string;
+  summary: {
+    total_settlements: number;
+    severed_settlements_count: number;
+    closing_soon_settlements_count: number;
+    open_safe_settlements_count: number;
+    active_railheads_count: number;
+    operational_hlzs_count: number;
+    total_road_network_km: number;
+    open_safe_road_km: number;
+    closing_soon_road_km: number;
+    severed_road_km: number;
+  };
+  roadway_network: {
+    open_safe_km: number;
+    closing_soon_km: number;
+    severed_km: number;
+    closing_soon_segments: any[];
+    severed_segments: any[];
+  };
+  railway_system: {
+    active_railheads: any[];
+    rail_corridors_count: number;
+    evacuation_service: string;
+  };
+  airway_system: {
+    strategic_airbase: {
+      name: string;
+      coordinates: [number, number];
+      elevation_m: number;
+      fleet: string[];
+    };
+    total_hlzs: number;
+    flight_speed_kmh: number;
+  };
+  settlement_plans: SettlementMultiModalPlan[];
+  zero_fabrication_guarantee: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// All-India Dynamic Basin Scouting & Surveillance Types
+// ---------------------------------------------------------------------------
+
+export interface ScoutRegionRequest {
+  name?: string;
+  latitude: number;
+  longitude: number;
+  min_lat?: number;
+  min_lon?: number;
+  max_lat?: number;
+  max_lon?: number;
+  radius_km?: number;
+}
+
+export interface ScoutHydrology {
+  current_discharge_m3s: number;
+  peak_forecast_m3s: number;
+  warning_threshold_m3s: number;
+  critical_threshold_m3s: number;
+  discharge_timeline: Array<{ date: string; discharge_m3s: number }>;
+  alert_tier: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  alert_color: 'emerald' | 'amber' | 'red';
+  alert_title: string;
+  alert_description: string;
+  data_source: string;
+}
+
+export interface ScoutMeteorology {
+  temperature_c: number;
+  precipitation_current_mm: number;
+  relative_humidity_pct: number;
+  wind_speed_kmh: number;
+  rain_7day_accumulated_mm: number;
+  data_source: string;
+}
+
+export interface ScoutRegionResult {
+  scout_id: string;
+  region_name: string;
+  coordinates: { latitude: number; longitude: number };
+  bounding_box: number[];
+  nearest_basin: string;
+  state_jurisdiction: string;
+  telemetry_timestamp_utc: string;
+  telemetry_timestamp_ist: string;
+  hydrology: ScoutHydrology;
+  meteorology: ScoutMeteorology;
+  operational_recommendations: string[];
+  zero_fabrication_guarantee: boolean;
+}
+
+export interface SurveillanceDates {
+  anchor_date: string;
+  date_1y_ago: string;
+  date_7d_ago: string;
+  date_1d_ago: string;
+  date_live: string;
+  timestamp_utc: string;
+  timestamp_ist: string;
+}
+
+export interface LiveSatelliteSyncStatus {
+  status: string;
+  system_time_utc: string;
+  system_time_ist: string;
+  sentinel1_sar: {
+    satellite: string;
+    instrument: string;
+    acquisition_date_utc: string;
+    acquisition_date_ist: string;
+    orbit_mode: string;
+    scene_id: string;
+    status: string;
+  };
+  sentinel2_optical: {
+    satellite: string;
+    instrument: string;
+    acquisition_date_utc: string;
+    acquisition_date_ist: string;
+    cloud_cover_percent: number;
+    scene_id: string;
+    status: string;
+  };
+  nasa_viirs_dnb: {
+    satellite: string;
+    product: string;
+    observation_date: string;
+    lunar_phase: string;
+    lunar_illumination_percent: number;
+    status: string;
+  };
+  open_meteo_glofas: {
+    model: string;
+    current_discharge_m3s: number | null;
+    peak_forecast_14d_m3s: number | null;
+    forecast_window: string;
+    status: string;
+  };
+  zero_fabrication_verified: boolean;
+}
+
+export interface PlaceReconData {
+  status: string;
+  coordinates: { lat: number; lon: number };
+  dem_elevation_m: number;
+  nearest_settlement: {
+    name: string;
+    distance_km: number;
+    elevation_m?: number;
+    place_type?: string;
+    population?: number;
+    hazard_zone?: string;
+    osm_id?: number;
+  };
+  nearest_hospital: {
+    name: string;
+    distance_km: number;
+    facility_type: string;
+    capacity_beds?: number;
+    trauma_centre?: boolean;
+  };
+  nearest_hlz: {
+    hlz_id?: string;
+    name: string;
+    distance_km: number;
+    elevation_m?: number;
+    slope_degrees?: number;
+    clearance_m?: number;
+    suitability_tier?: string;
+    operational_status?: string;
+  };
+  nearest_railhead: {
+    name: string;
+    distance_km: number;
+    code?: string;
+    operator?: string;
+    evacuation_role?: string;
+  };
+  ground_photo: {
+    photo_url?: string;
+    title: string;
+    author?: string;
+    license?: string;
+    radius_searched_m?: number;
+    distance_km?: number;
+    landmark_title?: string;
+    provenance?: string;
+    pageid?: number;
+    image_url?: string;
+    thumb_url?: string;
+    description_url?: string;
+    attribution?: string;
+    source?: string;
+  } | null;
+  aerial_tile_preview_url: string;
+  timestamp_utc: string;
+}
+
+export interface HistoricalBestGranule {
+  status: string;
+  scene_id?: string;
+  collection?: string;
+  mission?: string;
+  platform?: string;
+  instrument?: string;
+  year: number;
+  target_date?: string | null;
+  acquisition_date?: string;
+  cloud_cover_percent?: number;
+  tile_url_template?: string;
+  preview_url?: string;
+  bounds?: number[];
+  bbox?: number[];
+  resolution_m?: number;
+  message?: string;
+  zero_fabrication_verified?: boolean;
+}
+
+export interface LatestNightPass {
+  status: string;
+  granule_id?: string;
+  dataset_id?: string;
+  sensor?: string;
+  gibs_layer?: string;
+  gibs_date?: string;
+  acquisition_utc?: string;
+  acquisition_ist?: string;
+  time_start?: string;
+  time_end?: string;
+  granule_size_mb?: number;
+  tile_url_template?: string;
+  bbox?: number[];
+  zero_fabrication_verified?: boolean;
+  data_policy?: string;
+  swath_disclaimer?: string;
+  message?: string;
+}
+
 
 
 

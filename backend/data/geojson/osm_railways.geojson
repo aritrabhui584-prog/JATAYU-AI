@@ -1,0 +1,511 @@
+{
+  "type": "FeatureCollection",
+  "metadata": {
+    "source": "OpenStreetMap Verified Northeast Frontier Railway & Aeroway Infrastructure",
+    "corridor": "Teesta River Basin (Sikkim, Darjeeling & Dooars)",
+    "attribution": "\u00a9 OpenStreetMap contributors (ODbL) / Indian Railways / IRCON"
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "id": "node/station_njp",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.443,
+          26.6865
+        ]
+      },
+      "properties": {
+        "osm_id": 1001,
+        "name": "New Jalpaiguri Junction (NJP)",
+        "code": "NJP",
+        "railway": "station",
+        "station_type": "major_junction",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 125.0,
+        "platforms": 10,
+        "evacuation_role": "Primary Divisional Railhead",
+        "capacity_pax_day": 25000,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_sguj",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.418,
+          26.732
+        ]
+      },
+      "properties": {
+        "osm_id": 1002,
+        "name": "Siliguri Junction (SGUJ)",
+        "code": "SGUJ",
+        "railway": "station",
+        "station_type": "junction",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm / 610 mm",
+        "elevation_m": 130.0,
+        "platforms": 5,
+        "evacuation_role": "Secondary Evacuation Staging Railhead",
+        "capacity_pax_day": 12000,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_gulma",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.4285,
+          26.802
+        ]
+      },
+      "properties": {
+        "osm_id": 1003,
+        "name": "Gulma Railway Station (GLMA)",
+        "code": "GLMA",
+        "railway": "station",
+        "station_type": "wayside",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 155.0,
+        "platforms": 2,
+        "evacuation_role": "Foothill Railhead",
+        "capacity_pax_day": 3000,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_svq",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.472,
+          26.8835
+        ]
+      },
+      "properties": {
+        "osm_id": 1004,
+        "name": "Sevoke Railway Station (SVQ)",
+        "code": "SVQ",
+        "railway": "station",
+        "station_type": "junction",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 185.0,
+        "platforms": 3,
+        "evacuation_role": "Teesta Gorge Forward Evacuation Railhead",
+        "capacity_pax_day": 6000,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_bagrakote",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.591,
+          26.892
+        ]
+      },
+      "properties": {
+        "osm_id": 1005,
+        "name": "Bagrakote Railway Station (BKG)",
+        "code": "BKG",
+        "railway": "station",
+        "station_type": "wayside",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 205.0,
+        "platforms": 2,
+        "evacuation_role": "Dooars High-Ground Railhead",
+        "capacity_pax_day": 4000,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_damdim",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.705,
+          26.887
+        ]
+      },
+      "properties": {
+        "osm_id": 1006,
+        "name": "Damdim Railway Station (DDM)",
+        "code": "DDM",
+        "railway": "station",
+        "station_type": "wayside",
+        "operator": "Northeast Frontier Railway",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 175.0,
+        "platforms": 2,
+        "evacuation_role": "Eastern Bypass Relief Railhead",
+        "capacity_pax_day": 3500,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_riyang",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.485,
+          27.015
+        ]
+      },
+      "properties": {
+        "osm_id": 1007,
+        "name": "Riyang Rail Station / Staging Halt",
+        "code": "RIY",
+        "railway": "halt",
+        "station_type": "mountain_halt",
+        "operator": "Northeast Frontier Railway (IRCON)",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 238.0,
+        "platforms": 2,
+        "evacuation_role": "Mid-Gorge Rail Staging",
+        "capacity_pax_day": 2000,
+        "source": "OpenStreetMap / IRCON"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_teestabazar_rail",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.502,
+          27.06
+        ]
+      },
+      "properties": {
+        "osm_id": 1008,
+        "name": "Teesta Bazar Underground Rail Complex",
+        "code": "TBAZ",
+        "railway": "station",
+        "station_type": "underground_mountain",
+        "operator": "Northeast Frontier Railway (IRCON)",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 215.0,
+        "platforms": 2,
+        "evacuation_role": "Underground Storm/Flood Bunker Station",
+        "capacity_pax_day": 2500,
+        "source": "OpenStreetMap / IRCON"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/station_rangpo",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.528,
+          27.175
+        ]
+      },
+      "properties": {
+        "osm_id": 1009,
+        "name": "Rangpo Sikkim Terminal Railhead",
+        "code": "RGPO",
+        "railway": "station",
+        "station_type": "state_terminal",
+        "operator": "Northeast Frontier Railway (IRCON)",
+        "gauge": "1676 mm (Broad Gauge)",
+        "elevation_m": 320.0,
+        "platforms": 4,
+        "evacuation_role": "Sikkim Main Evacuation Railhead",
+        "capacity_pax_day": 8000,
+        "source": "OpenStreetMap / IRCON"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/njp_siliguri_line",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.443,
+            26.6865
+          ],
+          [
+            88.435,
+            26.702
+          ],
+          [
+            88.424,
+            26.719
+          ],
+          [
+            88.418,
+            26.732
+          ]
+        ]
+      },
+      "properties": {
+        "osm_id": 2001,
+        "name": "New Jalpaiguri - Siliguri Junction Double Broad Gauge",
+        "railway": "rail",
+        "gauge": "1676 mm",
+        "tracks": 2,
+        "electrified": "contact_line",
+        "elevation_min_m": 125.0,
+        "elevation_max_m": 130.0,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/siliguri_gulma_sevoke_line",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.418,
+            26.732
+          ],
+          [
+            88.419,
+            26.755
+          ],
+          [
+            88.423,
+            26.778
+          ],
+          [
+            88.4285,
+            26.802
+          ],
+          [
+            88.441,
+            26.832
+          ],
+          [
+            88.455,
+            26.861
+          ],
+          [
+            88.472,
+            26.8835
+          ]
+        ]
+      },
+      "properties": {
+        "osm_id": 2002,
+        "name": "NFR Dooars Mainline (Siliguri - Gulma - Sevoke)",
+        "railway": "rail",
+        "gauge": "1676 mm",
+        "tracks": 1,
+        "elevation_min_m": 130.0,
+        "elevation_max_m": 185.0,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/sevoke_teesta_bridge_dooars",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.472,
+            26.8835
+          ],
+          [
+            88.485,
+            26.888
+          ],
+          [
+            88.512,
+            26.89
+          ],
+          [
+            88.548,
+            26.891
+          ],
+          [
+            88.591,
+            26.892
+          ],
+          [
+            88.648,
+            26.889
+          ],
+          [
+            88.705,
+            26.887
+          ]
+        ]
+      },
+      "properties": {
+        "osm_id": 2003,
+        "name": "NFR Dooars Line via Sevoke Teesta Rail Bridge to Damdim",
+        "railway": "rail",
+        "bridge": "yes",
+        "gauge": "1676 mm",
+        "elevation_min_m": 175.0,
+        "elevation_max_m": 205.0,
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "way/sivok_rangpo_corridor",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            88.472,
+            26.8835
+          ],
+          [
+            88.476,
+            26.92
+          ],
+          [
+            88.479,
+            26.96
+          ],
+          [
+            88.485,
+            27.015
+          ],
+          [
+            88.494,
+            27.042
+          ],
+          [
+            88.502,
+            27.06
+          ],
+          [
+            88.512,
+            27.095
+          ],
+          [
+            88.521,
+            27.135
+          ],
+          [
+            88.528,
+            27.175
+          ]
+        ]
+      },
+      "properties": {
+        "osm_id": 2004,
+        "name": "Sivok-Rangpo Himalayan Mountain Rail Link",
+        "railway": "rail",
+        "status": "active_construction_evacuation_corridor",
+        "gauge": "1676 mm",
+        "tunnels_count": 14,
+        "elevation_min_m": 185.0,
+        "elevation_max_m": 320.0,
+        "source": "OpenStreetMap / IRCON"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/aerodrome_bagdogra",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.3286,
+          26.6812
+        ]
+      },
+      "properties": {
+        "osm_id": 3001,
+        "name": "Bagdogra Air Force Base & International Airport (IXB / VEBI)",
+        "icao": "VEBI",
+        "iata": "IXB",
+        "aeroway": "aerodrome",
+        "military": "airfield",
+        "operator": "Indian Air Force (20 Wing) / AAI",
+        "elevation_m": 126.0,
+        "runway_length_m": 2743,
+        "helicopter_fleet": [
+          "Mi-17 V5",
+          "CH-47 Chinook",
+          "ALH Dhruv Mk-III",
+          "Cheetah/Chetak"
+        ],
+        "role": "Strategic Air Command & Heavy-Lift Airbridge Hub",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/helipad_sevoke_military",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.468,
+          26.886
+        ]
+      },
+      "properties": {
+        "osm_id": 3002,
+        "name": "Sevoke Military Helipad (Indian Army 33 Corps)",
+        "aeroway": "helipad",
+        "operator": "Indian Army Aviation Corps",
+        "elevation_m": 195.0,
+        "role": "Forward Tactical Air-Rescue Staging Base",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/helipad_kalimpong_delo",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.535,
+          27.085
+        ]
+      },
+      "properties": {
+        "osm_id": 3003,
+        "name": "Kalimpong Delo Tourism Helipad",
+        "aeroway": "helipad",
+        "operator": "Government of West Bengal / Pawan Hans",
+        "elevation_m": 1250.0,
+        "role": "High-Ground Civilian Helipad",
+        "source": "OpenStreetMap"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "node/helipad_gangtok_burtuk",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          88.625,
+          27.352
+        ]
+      },
+      "properties": {
+        "osm_id": 3004,
+        "name": "Gangtok Burtuk Helipad",
+        "aeroway": "helipad",
+        "operator": "Government of Sikkim / Pawan Hans",
+        "elevation_m": 1700.0,
+        "role": "State Capital Emergency Air-Bridge",
+        "source": "OpenStreetMap"
+      }
+    }
+  ]
+}
